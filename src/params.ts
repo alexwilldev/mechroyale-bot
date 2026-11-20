@@ -1,0 +1,20 @@
+/** All tunables in one place. Two profiles later (practice / ffa); Phase 0 uses one. */
+export const P = {
+  // Upgrade priority, first available wins. Ids from hello.config.upgrades.
+  upgradeOrder: [
+    "plating", "armor", "nanites", "gun_damage", "laser_damage", "gun_rate", "laser_charge",
+    "lightning_efficiency", "mortar_reload", "gyros", "gun_mag", "gun_velocity", "lightning_range",
+    "lightning_chain", "mortar_velocity", "mortar_splash", "laser_pierce", "sensors", "reactor",
+    "capacitor", "jets", "servos",
+  ],
+  // Weapon preference for the second slot (higher = better).
+  weaponScore: { laser: 3, lightning: 2, mortar: 1, gun: 0 } as Record<string, number>,
+  lootDetour: 45, // m: walk to visible pickups/cubes this close when no threat
+  crateShootRange: 70, // m: shoot crates when no threat
+  zoneSafety: 0.75, // stay within this fraction of the next radius from next_center
+  strafeFlip: 1.4, // s between strafe direction changes
+  threatMemory: 4, // s to keep facing the last damage bearing
+  mortarMinRange: 18, // m: no mortar closer than this (self splash)
+  lightningEnergyFloor: 12,
+  endgameRadius: 70, // once the next circle is this small, stand on next_center exactly
+}

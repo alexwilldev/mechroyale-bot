@@ -3,7 +3,15 @@
 Full plan: `~/.claude/plans/create-a-plan-to-vast-sifakis.md`. Cutoff **Sun 11:00 AM ET**.
 
 ## Current phase
-Phase 0 done → next: **Phase 1 (world model)**.
+Phase 0 + Phase 1 done → next: **Phase 2 (sandbox sim)**, then Phase 3 (combat core).
+
+## Phase 1 (world model) — done
+- `src/world/map.ts` `GameMap`: terrain (bilinear), prisms rasterized onto the 1 m grid as [base, top] intervals per cell, `solidAt`, `surfaceAt`, `los` (shots: prisms + terrain; trees ignored since they don't stop shots), `rayWall`. Loads in ~90 ms; LOS ~3 µs.
+- `src/world/nav.ts` `Nav`: 3 m grid, clearance 2.3 m, step-up/slope, headroom 9 m, A* (binary heap, expansion cap, partial paths), `lineFree`, `nearestFree`. Builds in ~60 ms; A* p50 0.5 ms, p90 5 ms, worst ~26 ms uncapped (capped at 15k expansions in the bot).
+- Validated against the recorded stream: grounded heights match the map within 6 mm.
+- `main.ts`: movement follows A* routes (string-pulled, replan every 1.5 s or when the goal moves); walks straight when on a roof; gun/laser fire only with a clear shot line; crates only targeted with LOS; JIT warmup at hello; label shows ms per tick and max ms.
+- `bun test` (test/world.test.ts): 7 pass.
+- Known gaps: no rooftop routing (jump/jet edges), no vision/canopy model, unstick logic still the Phase 0 heuristic.
 
 ## Done
 - Repo scaffold: `Dockerfile` (oven/bun:1.4.4-slim pinned), `src/mechfight.ts` (kit wrapper, unchanged), `kit/` (kit incl. map + check.py; excluded from image via .dockerignore).
@@ -11,9 +19,9 @@ Phase 0 done → next: **Phase 1 (world model)**.
 - check.py PASS locally and in the scorer sandbox. Native container: max 6 ms/answer. Under amd64 emulation on the Mac, ~2/300 answers come late (emulation only; the scorer builds amd64 natively).
 
 ## Next 3 tasks
-1. `src/world/map.ts`: load world.json + terrain.i16, prism grid index, heightAt (bilinear), segment LOS vs prisms (+canopy).
-2. `src/world/nav.ts`: 4 m nav grid + A*, step-up/slope, roof access; use it for movement goals (replaces naive straight-line + unstick).
-3. Fire gating by LOS (stop shooting into walls at memory-tracked mechs).
+1. `sim/`: sandbox on top of `src/world` (tick loop, movement physics with wall slide, gun/laser/lightning/mortar, zone, crates/NPCs/cubes, loot) that spawns bot processes over stdin/stdout.
+2. Scripted hunter squad (shared vision, weakest-first, ramps up over time) + batch runner printing mean 16-place, kills, cause of death, p99 tick ms.
+3. Phase 3 combat: tracker, cover use (peek/shoot), facing the threat for rear armor, laser dodge.
 
 ## Submissions (commit → practice score)
 | commit | what | score |

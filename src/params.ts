@@ -16,5 +16,7 @@ export const P = {
   threatMemory: 4, // s to keep facing the last damage bearing
   mortarMinRange: 18, // m: no mortar closer than this (self splash)
   lightningEnergyFloor: 12,
+  replanEvery: 1.5, // s between A* replans toward the same goal
+  maxExpand: 15000, // A* expansion cap per plan (bounds worst-case tick time)
   endgameRadius: 70, // once the next circle is this small, stand on next_center exactly
 }

@@ -1,6 +1,8 @@
 /** Phase 0 "zone-centre turtle": hold the safe zone, farm cubes/loot when quiet, lead-aim and face threats. */
-import { type ActorObs, type BotAction, draw, type Hello, type Observation, run, type WeaponObs } from "./mechfight.ts"
+import { type ActorObs, type BotAction, draw, type Hello, log, type Observation, run, type WeaponObs } from "./mechfight.ts"
 import { P } from "./params.ts"
+import { GameMap } from "./world/map.ts"
+import { defaultNavOpts, Nav } from "./world/nav.ts"
 
 type V3 = number[]
 const TAU = Math.PI * 2
@@ -44,12 +46,72 @@ class Turtle {
   prevAlive = 16
   ffa = false
   kills = 0
+  map: GameMap | null = null
+  nav: Nav | null = null
+  route: { goal: V3; pts: number[][]; t: number } | null = null
+  maxMs = 0
 
   constructor(h: Hello) {
     this.cfg = h.config
+    try {
+      this.map = GameMap.load(h.map.dir)
+      const m = h.config.mech
+      this.nav = new Nav(this.map, { ...defaultNavOpts, stepUp: m.step_up ?? 1.2, maxSlopeDeg: m.max_slope_deg ?? 50 })
+      // warm up the JIT on the hot paths while we still have the hello budget
+      const b = this.map.bounds
+      for (let k = 0; k < 60; k++) {
+        const x1 = b.minX + ((k * 97) % 900), y1 = b.minY + ((k * 61) % 600)
+        const x2 = b.minX + ((k * 53) % 900), y2 = b.minY + ((k * 89) % 600)
+        this.nav.path(x1, y1, x2, y2, P.maxExpand, true)
+        this.nav.lineFree(x1, y1, x2, y2)
+        this.map.los([x1, y1, 8], [x2, y2, 5])
+      }
+    } catch (e) {
+      log("map/nav load failed, falling back to straight-line movement:", e)
+    }
+  }
+
+  /** Direction to walk toward goal: follow an A* route, string-pulled to the farthest visible waypoint. */
+  steer(pos: V3, goal: V3, t: number): number[] {
+    const nav = this.nav
+    const direct = () => {
+      const y = yawTo(pos, goal)
+      return [Math.cos(y), Math.sin(y)]
+    }
+    if (!nav) return direct()
+    // on a roof or ledge (not on the ground grid): walk straight, we'll drop off
+    const k = nav.idx(pos[0], pos[1])
+    if (k < 0 || (!nav.free[k] && pos[2] > nav.surf[k] + 3)) return direct()
+    if (nav.lineFree(pos[0], pos[1], goal[0], goal[1]) && hdist(pos, goal) < 60) {
+      this.route = null
+      return direct()
+    }
+    const r = this.route
+    const stale = !r || hdist(r.goal, goal) > 6 || t - r.t > P.replanEvery || !r.pts.length || hdist(pos, r.pts[0]) > 12
+    if (stale) {
+      const pts = nav.path(pos[0], pos[1], goal[0], goal[1], P.maxExpand, true)
+      this.route = pts && pts.length ? { goal: [...goal], pts, t } : null
+    }
+    const rt = this.route
+    if (!rt) return direct()
+    while (rt.pts.length > 1 && hdist(pos, rt.pts[0]) < 2.5) rt.pts.shift()
+    let aimPt = rt.pts[0]
+    for (let i = Math.min(rt.pts.length - 1, 8); i > 0; i--)
+      if (nav.lineFree(pos[0], pos[1], rt.pts[i][0], rt.pts[i][1])) {
+        aimPt = rt.pts[i]
+        break
+      }
+    const y = yawTo(pos, aimPt)
+    return [Math.cos(y), Math.sin(y)]
+  }
+
+  /** Clear shot line from muzzle to point (true when no map). */
+  clear(a: V3, b: V3): boolean {
+    return !this.map || this.map.los(a, b)
   }
 
   act(obs: Observation): BotAction {
+    const t0 = performance.now()
     const me = obs.self
     const t = obs.t
     const pos = me.pos
@@ -95,7 +157,12 @@ class Turtle {
       target = npcAttacker ?? npcNear ?? null
     }
     if (!target && quiet) {
-      crateTarget = obs.crates.filter((c) => hdist(c.pos, pos) < P.crateShootRange).sort((a, b) => hdist(a.pos, pos) - hdist(b.pos, pos))[0] ?? null
+      const eye = [pos[0], pos[1], pos[2] + (me.stats.muzzle_height ?? 7)]
+      crateTarget =
+        obs.crates
+          .filter((c) => hdist(c.pos, pos) < P.crateShootRange)
+          .sort((a, b) => hdist(a.pos, pos) - hdist(b.pos, pos))
+          .find((c) => this.clear(eye, [c.pos[0], c.pos[1], c.pos[2] + 1.2])) ?? null
     }
 
     // --- movement goal ---
@@ -124,10 +191,7 @@ class Turtle {
     }
 
     let mv = [0, 0]
-    if (goal) {
-      const y = yawTo(pos, goal)
-      mv = [Math.cos(y), Math.sin(y)]
-    }
+    if (goal) mv = this.steer(pos, goal, t)
     if (target && target.kind === "mech") {
       // strafe perpendicular to the target, biased toward the goal
       if (t > this.strafeUntil) {
@@ -183,7 +247,8 @@ class Turtle {
       const pitch = Math.atan2(aimP[2] - muzzle[2], hdist(muzzle, aimP))
       act.aim = [yaw, pitch]
       aimSet = true
-      const aligned = Math.abs(wrap(yaw - ayaw)) < tol && Math.abs(pitch - apitch) < tol + 0.02
+      const lineOk = this.clear(muzzle, aimP)
+      const aligned = lineOk && Math.abs(wrap(yaw - ayaw)) < tol && Math.abs(pitch - apitch) < tol + 0.02
 
       slots.forEach((w, i) => {
         if (!w) return
@@ -233,7 +298,9 @@ class Turtle {
       if (act.take != null) break
     }
 
-    draw.label(`${this.ffa ? "FFA" : "PRC"} ${state} hp${me.hp.toFixed(0)}/${me.max_hp.toFixed(0)} c${me.cubes} k${this.kills}${target ? ` tgt${target.id}` : ""}`)
+    const ms = performance.now() - t0
+    if (ms > this.maxMs) this.maxMs = ms
+    draw.label(`${this.ffa ? "FFA" : "PRC"} ${state} hp${me.hp.toFixed(0)}/${me.max_hp.toFixed(0)} c${me.cubes} k${this.kills}${target ? ` tgt${target.id}` : ""} ${ms.toFixed(1)}/${this.maxMs.toFixed(0)}ms`)
     return act
   }
 

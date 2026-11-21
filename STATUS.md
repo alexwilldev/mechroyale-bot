@@ -34,7 +34,8 @@ Phase 0 + Phase 1 done → next: **Phase 2 (sandbox sim)**, then Phase 3 (combat
 | 0519758 | Combat batch 4: face approaching footsteps/boost/jet sounds, capture supply drops when quiet, A* replan floor 0.5 s | ? (submitted 7:42pm) |
 | 5856b5c | Batch 5: offense-weighted upgrade order | ? |
 | 496d0d5 | Batch 6: idle -> wait at a covered spot (fewest open sight lines) inside the safe circle | ? |
-| (next) | Batch 7: only start NPC-drone fights above 65% hp | ? |
+| ad00bb3 | Batch 7: only start NPC-drone fights above 65% hp | ? |
+| (next) | Batch 8: reload when no clear shot and mag < 50% | ? |
 
 Baseline to beat: 1.15.
 

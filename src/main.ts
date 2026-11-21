@@ -424,6 +424,8 @@ export class Turtle {
         if (w.kind === "gun") {
           if (aligned && d < w.stats.range && (w.ammo ?? 1) > 0) act.fire![i] = true
           if ((w.ammo ?? 1) === 0 && !w.reload) act.reload = true
+          // no shot available right now: top up so the next exchange starts with a fuller magazine
+          else if (!lineOk && !w.reload && (w.ammo ?? 99) < w.stats.mag * P.reloadBelow) act.reload = true
         } else if (w.kind === "lightning") {
           const cone = ((w.stats.cone_deg ?? 30) * Math.PI) / 360
           if (d < w.stats.range - 2 && Math.abs(wrap(yawTo(pos, center) - ayaw)) < cone * 0.8 && me.energy > P.lightningEnergyFloor)

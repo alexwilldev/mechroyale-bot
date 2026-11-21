@@ -31,6 +31,7 @@ export const P = {
   holdRay: 50, // m: sight-line length used to measure exposure
   dropRange: 170, // m: go for supply drops this close when no enemy is in sight
   dropLate: 12, // s: still go if we arrive at most this long after it lands
+  reloadBelow: 0.5, // reload when no clear shot and the magazine is below this fraction
   npcHuntHp: 0.65, // only start fights with NPC drones above this hp fraction
   recoverHp: 0.6, // below this hp fraction with no enemy in sight: hold still and regenerate
   laserDodgeYaw: 0.15, // rad: an enemy charging a laser aimed this close to us -> dodge sideways

@@ -23,9 +23,9 @@ export const P = {
   laserScanUntil: 150, // s // m: go fetch a remembered laser this far, even mid-fight
   silentWalk: true, // batch 28: real test (sim cannot judge: its hunters ignore sound)
   silentFrac: 0.4, // move magnitude cap for silent walking (0.4 x 11.7 = 4.7 m/s)
-  backstab: 300, // target bonus when the enemy faces away from us
-  counterBonus: 200, // target bonus for weapon counters (laser vs mortar carrier, lightning vs laser carrier)
-  zoneVictim: 250, // target bonus for enemies standing outside the circle
+  backstab: 600, // target bonus when the enemy faces away from us
+  counterBonus: 400, // target bonus for weapon counters (laser vs mortar carrier, lightning vs laser carrier)
+  zoneVictim: 500, // target bonus for enemies standing outside the circle
   zoneHold: true, // never follow a target out of the circle
   droneLure: true, // when losing, retreat past a known drone
   preCharge: false, // batch 26 idea (real: no gain)

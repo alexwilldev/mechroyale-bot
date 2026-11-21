@@ -180,6 +180,20 @@ export class Turtle {
     return best
   }
 
+  /** Extra reasons to start a fight (giddy-style selective engagement). */
+  wantsFight(m: ActorObs, pos: V3): boolean {
+    if (!this.p.wideEngage) return false
+    const d = hdist(m.pos, pos)
+    const frac = (m.hp ?? 1400) / (m.max_hp ?? 1400)
+    if (frac < this.p.weakFrac && d < this.p.weakRange) return true // weak and in range
+    if (d < this.p.aimRange && Math.abs(wrap(m.aim[0] - yawTo(m.pos, pos))) < this.p.aimTol) return true // aiming at us
+    if (d < this.p.approachRange) {
+      const ux = (pos[0] - m.pos[0]) / Math.max(d, 1), uy = (pos[1] - m.pos[1]) / Math.max(d, 1)
+      if (m.vel[0] * ux + m.vel[1] * uy > this.p.approachSpeed) return true // closing on us
+    }
+    return false
+  }
+
   /** Target-score bonus for 'easy kills': backs turned, weapon counters, already bleeding in the zone. */
   predatorBonus(m: ActorObs, me: Observation["self"], pos: V3, obs: Observation): number {
     let b = 0
@@ -381,7 +395,9 @@ export class Turtle {
         m.kind === "mech" &&
         ((m.id === this.lastDamage.by && t - this.lastDamage.t < 6) || // anyone shooting us
           (!this.healing &&
-            (hdist(m.pos, pos) <= this.p.engageRange || (m.hp ?? 1e9) < this.p.finishHp * (m.max_hp ?? 1400)))), // close, or nearly dead
+            (hdist(m.pos, pos) <= this.p.engageRange ||
+              (m.hp ?? 1e9) < this.p.finishHp * (m.max_hp ?? 1400) ||
+              this.wantsFight(m, pos)))), // close, nearly dead, approaching, weak-in-range, or aiming at us
     )
     const npcs = obs.mechs.filter((m) => m.kind === "npc")
     let target: ActorObs | null = null
@@ -633,7 +649,7 @@ export class Turtle {
     let boost =
       !me.in_zone || (state === "rotate" && t > z.shrink_start - 10 && dCenter > z.next_radius) || (dodge && me.energy > this.p.dodgeEnergy)
     // strafe at boost speed during fights, with hysteresis so energy is left for dodges
-    if (state.startsWith("fight") || state.startsWith("endgame-fight")) {
+    if ((state.startsWith("fight") || state.startsWith("endgame-fight")) && !(this.ffa && this.p.fightBoostPracticeOnly)) {
       if (me.energy > this.p.fightBoostOn) this.fightBoost = true
       else if (me.energy < this.p.fightBoostOff) this.fightBoost = false
       if (this.fightBoost && me.grounded) boost = true
@@ -739,7 +755,13 @@ export class Turtle {
           const ly = yawTo(muzzle, lp), lpitch = Math.atan2(lp[2] - muzzle[2], hdist(muzzle, lp))
           const lAligned = this.clear(muzzle, lp) && Math.abs(wrap(ly - ayaw)) < tol && Math.abs(lpitch - apitch) < tol + 0.02
           if (full) act.aim = [ly, lpitch] // charged: the laser owns the aim
-          this.laser(act, i, w, lAligned, d)
+          // lethal laser: release a partial charge as soon as it is enough to kill
+          const lc = w.charge ?? 0, lf = w.stats.charge ?? 0.75, mf = w.stats.min_frac ?? 0.35
+          const ldmg = (w.stats.damage ?? 315) * (mf + (1 - mf) * Math.min(1, lc / lf)) * (1 + 0.04 * Math.min(me.cubes, 10))
+          const lethal = this.p.lethalLaser && lAligned && lc >= (w.stats.min_charge ?? 0.15) && target.hp != null && ldmg >= target.hp
+          if (lethal) state += "+lethal"
+          else this.laser(act, i, w, lAligned, d)
+          if (lethal) act.aim = [ly, lpitch]
         } else if (w.kind === "mortar" && target && d > this.p.mortarMinRange && !this.laserCharging(slots)) {
           // lead the shell: solve pitch for the current spot, then re-solve for where the target will be on landing
           let tgt = target.pos

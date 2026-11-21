@@ -77,7 +77,8 @@ Noise: the same build varies about ±0.3 between runs (2.38 vs 2.71), so single-
 | 90dfa02 | Batch 30: 27 + doubled predator bonuses, silent OFF | REAL 3.83 |
 | 4e2a7d3 | Batch 31: 27 + selective fights (60 m / attackers / <30% hp) - from top public repos | REAL 4.52 BEST (98th) |
 | 5b01421 | Batch 32: 31 + heal-to-full | REAL 4.40 |
-| (HEAD) | main = batch 31 behaviour (blank-commit resubmit = best) | - |
+| 85b7a04 | main = batch 31 behaviour | - |
+| (next) | Batch 33: 31 + giddy-style wide engage (approaching<180, weak<40%@160, aiming-at-us@190), fight boost >40 energy (practice only), lethal partial laser, lock 200 | ? |
 Qualifying tip: only the best practice score counts and runs vary +-0.3, so resubmitting the best build (2e74457) can draw a higher score.
 
 Baseline to beat: 1.15.

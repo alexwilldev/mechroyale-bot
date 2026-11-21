@@ -16,6 +16,14 @@ export const P = {
   ffaOverrides: {} as Record<string, number>, // sim FFA h2h of engageRange=60 was +0.7, -0.84, 0.0 on 3 seed sets: no reliable edge, so no switch
   engageRange: 60, // top teams (5.1+): only fight mechs within ~60 m, attackers, or nearly dead ones (don't wake idle house bots)
   finishHp: 0.3, // also engage any visible mech below this hp fraction
+  wideEngage: true, // batch 33 (giddy-style): also engage approaching / weak-in-range / aiming-at-us mechs
+  weakFrac: 0.4, // weak = below this hp fraction...
+  weakRange: 160, // ...within this range
+  aimRange: 190, // aiming at us within this range...
+  aimTol: 0.25, // ...within this yaw tolerance (rad)
+  approachRange: 180, // closing on us within this range...
+  approachSpeed: 1, // ...faster than this (m/s)
+  lethalLaser: true, // release a partial laser charge when it already kills
   healStart: 0, // heal-to-full: REAL batch 32 4.40 < batch 31 4.52; calibrated sim -0.23 -> off
   healUntil: 0.95, // ...until back above this
   laserMemory: 60, // s to remember a laser pickup we saw
@@ -34,7 +42,7 @@ export const P = {
   preCharge: false, // batch 26 idea (real: no gain)
   laserPeek: false, // batch 25 idea (real: no gain)
   isolate: false, // batch 24 idea (real: no gain)
-  lockBonus: 150,
+  lockBonus: 200,
   attackerBonus: 250, // target bonus for whoever damaged us in the last 3 s
   rearBonus: 0, // extra target bonus for whoever hit us in the back in the last 2 s
   spreadBackoff: 0, // move away from the enemy centroid when they spread >90° around us (0 = off) // target score bonus for staying on the current target (finish kills before they regen) // target score: hp + dist * this (lower = preferred)
@@ -74,7 +82,8 @@ export const P = {
   roofArea: 400, // m²: minimum footprint
   roofSearch: 250, // m: only roofs this close
   climbTimeout: 5, // s: give up a climb (and blacklist that roof) after this
-  fightBoostOn: 80, // start boost-strafing in fights above this energy
-  fightBoostOff: 45, // stop below this (keeps a reserve for dodges) // keep this much energy before boosting to dodge
+  fightBoostOn: 40, // batch 33 (giddy-style): boost throughout fights above 40 energy (practice only)
+  fightBoostOff: 35,
+  fightBoostPracticeOnly: true, // a top team found fight boost hurts in free-for-all
   endgameRadius: 70, // once the next circle is this small, stand on next_center exactly
 }

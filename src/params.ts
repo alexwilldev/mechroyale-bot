@@ -8,14 +8,17 @@ export const P = {
     "mortar_velocity", "mortar_splash", "sensors", "laser_pierce", "reactor", "capacitor", "jets", "servos",
   ],
   // Weapon preference for the second slot (higher = better).
-  weaponScore: { laser: 3, lightning: 2, mortar: 1, gun: 0 } as Record<string, number>,
+  weaponScore: { laser: 3, mortar: 2, lightning: 1, gun: 0 } as Record<string, number>, // sim: laser +1.9 pts, mortar +0.3, lightning -0.2
   lootDetour: 80, // m: walk to visible cubes this close when no threat
   pickupDetour: 160, // m: walk to wanted weapon pickups this close when no threat
-  targetDistW: 4, // target score: hp + dist * this (lower = preferred)
+  targetDistW: 4,
+  laserMemory: 60, // s to remember a laser pickup we saw
+  laserDetour: 250, // m: go fetch a remembered laser this far, even mid-fight
+  lockBonus: 150, // target score bonus for staying on the current target (finish kills before they regen) // target score: hp + dist * this (lower = preferred)
   retreatHp: 0.35, // break line of sight below this hp fraction when the enemy has more hp
-  gunRange: 90,
+  gunRange: 130, // sim: 130 m beats 90 m by ~+0.5
   laserRange: 150, // m: preferred distance when holding a laser // m: preferred fighting distance with gun/laser
-  lightningRange: 28, // m: preferred distance when lightning is charged up
+  lightningRange: 130, // sim: closing in for lightning loses points; effectively disabled // m: preferred distance when lightning is charged up
   farmCubes: 0, // keep roaming for crates/drones/cubes until we hold this many cubes
   farmUntilT: 230, // ...or until this time
   npcRange: 80, // m: engage NPC drones this close (when healthy)

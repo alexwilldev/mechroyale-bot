@@ -3,6 +3,9 @@
 Full plan: `~/.claude/plans/create-a-plan-to-vast-sifakis.md`. Cutoff **Sun 11:00 AM ET**.
 
 ## Current phase
+SIMULATOR BUILT (sim/sim.ts + sim/run.ts). Calibrated: old build scores ~3.4 in sim vs ~3.5 real. Usage:
+`bun sim/run.ts --n 100 --seed 5 [--set key=val,...] [--start laser] [--svg /tmp/x.svg]` (100 matches ~25 s).
+Sim findings: laser from start = 5.5 pts (vs 3.6) -> getting a laser early is THE lever; gun range 130 > 90 (+0.5); strong target lock hurts; roofs/boost/retreat/recover ~no effect; lightning closing hurts.
 PIVOT (user call): sim paused; shipping combat batches straight to the real scorer. No match replays are available, so the scorer is the only feedback.
 Phase 0 + Phase 1 done → next: **Phase 2 (sandbox sim)**, then Phase 3 (combat core).
 
@@ -44,7 +47,8 @@ Noise: the same build varies about ±0.3 between runs (2.38 vs 2.71), so single-
 | 6ce1d2a | Batch 12: farming OFF (batch 9 ranges) + batch 11 deadlines | 3.46, wait 143 ms |
 | 3d8e3e2 | Batch 13: range play (laser 150 m, gun 90 m) + faster strafe flips (0.5-1.3 s) | 3.46, wait 25 ms |
 | bab1cad | Batch 14: batch 13 + boost-strafing in fights (on >80 energy, off <45) | ? (x2) |
-| (next) | Batch 15: batch 14 + rooftop camping when idle (75 candidate roofs 6-40 m, jump+jet climb, 5 s timeout, edge guard) | ? |
+| 6c937e2 | Batch 15: batch 14 + rooftop camping when idle | 3.52 (one of 14/15; user: 'def not the move') |
+| (next) | Batch 16 (SIM-DRIVEN): laser seeking even mid-fight (memory 60 s, 250 m, inside zone), weapon pref laser>mortar>lightning, no closing for lightning, gun range 130 m | sim 4.3 vs 3.1-3.6 old |
 
 Baseline to beat: 1.15.
 

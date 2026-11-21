@@ -52,6 +52,7 @@ export class Turtle {
   maxMs = 0
   lastTarget = -1
   lastPlanT = -99
+  lasers = new Map<number, { pos: V3; t: number }>()
   roofs: { id: number; cx: number; cy: number; top: number; launch: number[] }[] = []
   roofNow: { id: number; cx: number; cy: number; top: number; launch: number[] } | null = null
   badRoofs = new Set<number>()
@@ -253,6 +254,21 @@ export class Turtle {
       act.pick = best
     }
 
+    // --- laser memory: the laser roughly doubles our kill rate, so remember every one we see ---
+    const hasLaser = me.weapons.some((w) => w?.kind === "laser")
+    for (const p of obs.pickups) if (p.kind === "laser") this.lasers.set(p.id, { pos: p.pos, t })
+    for (const [id, l] of this.lasers)
+      if (t - l.t > P.laserMemory || (hdist(pos, l.pos) < 6 && !obs.pickups.some((p) => p.id === id))) this.lasers.delete(id)
+    let laserGoal: V3 | null = null
+    if (!hasLaser && me.hp / me.max_hp > P.retreatHp) {
+      let bd = P.laserDetour
+      for (const l of this.lasers.values()) {
+        const d = hdist(pos, l.pos)
+        const zc = obs.zone.center, safe = hdist(l.pos, [zc[0], zc[1]]) < obs.zone.radius - 25 && hdist(l.pos, obs.zone.next_center) < obs.zone.next_radius + 40
+        if (d < bd && safe && Math.abs(l.pos[2] - pos[2]) < 6) (bd = d), (laserGoal = l.pos)
+      }
+    }
+
     // --- target selection ---
     const mechs = obs.mechs.filter((m) => m.kind === "mech")
     const npcs = obs.mechs.filter((m) => m.kind === "npc")
@@ -264,7 +280,7 @@ export class Turtle {
         (m.hp ?? 1400) +
         hdist(m.pos, pos) * P.targetDistW -
         (m.id === this.lastDamage.by && t - this.lastDamage.t < 3 ? 250 : 0) -
-        (m.id === this.lastTarget ? 150 : 0) +
+        (m.id === this.lastTarget ? P.lockBonus : 0) +
         (this.clear(eyeP, [m.pos[0], m.pos[1], m.pos[2] + 4.5]) ? 0 : 900)
       target = mechs.reduce((a, b) => (score(a) <= score(b) ? a : b))
       this.lastTarget = target.id
@@ -377,7 +393,12 @@ export class Turtle {
       // reuse a recent cover point; search again at most every 0.5 s and only with time left this tick
       if (needCover && (t - this.coverT > 0.5 || !this.cover) && !this.late()) (this.cover = this.findCover(pos, target.pos)), (this.coverT = t)
       const cover = needCover ? this.cover : null
-      if (cover && state !== "endgame") {
+      if (laserGoal && !losing && state !== "endgame") {
+        const g = this.steer(pos, laserGoal, t)
+        const py = ty0 + (this.strafeSign * Math.PI) / 2
+        mv = [g[0] + Math.cos(py) * 0.3, g[1] + Math.sin(py) * 0.3]
+        state = "fight-laser"
+      } else if (cover && state !== "endgame") {
         mv = this.steer(pos, cover, t)
         state = losing ? "retreat" : "reload-cover"
       } else {

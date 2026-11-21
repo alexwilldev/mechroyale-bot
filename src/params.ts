@@ -3,11 +3,9 @@ export const P = {
   // Upgrade priority, first available wins. Ids from hello.config.upgrades.
   upgradeOrder: [
     // practice placement = hunters killed before we die, so offense ranks high; plating stays first (also wins the final-zone HP race)
-    // EXPERIMENT A: original defensive order (plating, armor, nanites first)
-    "plating", "armor", "nanites", "gun_damage", "laser_damage", "gun_rate", "laser_charge",
-    "lightning_efficiency", "mortar_reload", "gyros", "gun_mag", "gun_velocity", "lightning_range",
-    "lightning_chain", "mortar_velocity", "mortar_splash", "laser_pierce", "sensors", "reactor",
-    "capacitor", "jets", "servos",
+    "plating", "laser_damage", "gun_damage", "laser_charge", "armor", "gun_rate", "lightning_efficiency",
+    "mortar_reload", "nanites", "gun_mag", "gyros", "lightning_range", "gun_velocity", "lightning_chain",
+    "mortar_velocity", "mortar_splash", "sensors", "laser_pierce", "reactor", "capacitor", "jets", "servos",
   ],
   // Weapon preference for the second slot (higher = better).
   weaponScore: { laser: 3, mortar: 2, lightning: 1, gun: 0 } as Record<string, number>, // sim: laser +1.9 pts, mortar +0.3, lightning -0.2
@@ -27,7 +25,7 @@ export const P = {
   attackerBonus: 250, // target bonus for whoever damaged us in the last 3 s
   rearBonus: 0, // extra target bonus for whoever hit us in the back in the last 2 s
   spreadBackoff: 0, // move away from the enemy centroid when they spread >90° around us (0 = off) // target score bonus for staying on the current target (finish kills before they regen) // target score: hp + dist * this (lower = preferred)
-  retreatHp: 0.35, // break line of sight below this hp fraction when the enemy has more hp
+  retreatHp: 0, // EXPERIMENT B: never retreat
   gunRange: 90, // batch 20
   laserRange: 110, // REAL best (batch 20: 4.13). 255->3.42 230->3.79 150->3.85/3.60 80->3.69 50->4.04
   lightningRange: 130, // REAL batch 23 (lightning on) 3.65 < batch 20: keep it off
@@ -54,7 +52,7 @@ export const P = {
   dropLate: 12, // s: still go if we arrive at most this long after it lands
   reloadBelow: 0.5, // reload when no clear shot and the magazine is below this fraction
   npcHuntHp: 0.65, // only start fights with NPC drones above this hp fraction
-  recoverHp: 0.6, // below this hp fraction with no enemy in sight: hold still and regenerate
+  recoverHp: 0.4, // EXPERIMENT B
   laserDodgeYaw: 0.15, // rad: an enemy charging a laser aimed this close to us -> dodge sideways
   dodgeEnergy: 20,
   useRoofs: true, // camp on rooftops when idle

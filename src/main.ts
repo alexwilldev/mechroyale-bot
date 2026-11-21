@@ -52,6 +52,7 @@ export class Turtle {
   maxMs = 0
   lastTarget = -1
   lastPlanT = -99
+  fightBoost = false
   t0 = 0
   cover: V3 | null = null
   coverT = -99
@@ -395,6 +396,12 @@ export class Turtle {
     }
     let boost =
       !me.in_zone || (state === "rotate" && t > z.shrink_start - 10 && dCenter > z.next_radius) || (dodge && me.energy > P.dodgeEnergy)
+    // strafe at boost speed during fights, with hysteresis so energy is left for dodges
+    if (state.startsWith("fight") || state.startsWith("endgame-fight")) {
+      if (me.energy > P.fightBoostOn) this.fightBoost = true
+      else if (me.energy < P.fightBoostOff) this.fightBoost = false
+      if (this.fightBoost && me.grounded) boost = true
+    } else this.fightBoost = false
     if (t < this.unstickUntil) {
       act.jump = me.grounded
       if (!me.grounded && me.energy > 15) boost = true

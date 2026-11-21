@@ -41,7 +41,8 @@ Noise: the same build varies about ±0.3 between runs (2.38 vs 2.71), so single-
 | 5c0d497 | Batch 10: cube farming until 8 cubes or 230 s (roam, crates 110 m, drones 120 m, cubes 120 m) | 3.56 (23rd), wait 83 ms |
 | a0313b7 | Batch 11: batch 10 + hard 20 ms deadline inside searches, soft budget 8 ms | 3.17, wait 73 ms |
 | 6ce1d2a | Batch 12: farming OFF (batch 9 ranges) + batch 11 deadlines | ? |
-| (next) | Batch 13: range play (laser 150 m, gun 90 m) + faster strafe flips (0.5-1.3 s) | ? |
+| 3d8e3e2 | Batch 13: range play (laser 150 m, gun 90 m) + faster strafe flips (0.5-1.3 s) | ? |
+| (next) | Batch 14: batch 13 + boost-strafing in fights (on >80 energy, off <45) | ? |
 
 Baseline to beat: 1.15.
 

@@ -41,6 +41,8 @@ export const P = {
   npcHuntHp: 0.65, // only start fights with NPC drones above this hp fraction
   recoverHp: 0.6, // below this hp fraction with no enemy in sight: hold still and regenerate
   laserDodgeYaw: 0.15, // rad: an enemy charging a laser aimed this close to us -> dodge sideways
-  dodgeEnergy: 20, // keep this much energy before boosting to dodge
+  dodgeEnergy: 20,
+  fightBoostOn: 80, // start boost-strafing in fights above this energy
+  fightBoostOff: 45, // stop below this (keeps a reserve for dodges) // keep this much energy before boosting to dodge
   endgameRadius: 70, // once the next circle is this small, stand on next_center exactly
 }

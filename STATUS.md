@@ -3,6 +3,7 @@
 Full plan: `~/.claude/plans/create-a-plan-to-vast-sifakis.md`. Cutoff **Sun 11:00 AM ET**.
 
 ## Current phase
+LIVE FFA vs top public bots (real engine, 8 each): ours b31 11.75 > giddy(6.00 practice) 10.62 > jishnu(5.81) 9.88 -> our FFA play is fine; the gap is practice-only. Fight-odds model (own fit): engage-on-odds hurts in sim, flee neutral.
 LIVE REAL-ENGINE TESTING (Sat ~15:00): `bun sim/live.ts --n 4 --tag X --set k=v` plays private FFA rooms on play.joinbuilders.org (user approved). Real house bots, real engine; ~1.5-3 min/match. Use for FFA (final) decisions; practice board for practice.
 SIM RECALIBRATED (Sat ~14:00): house bots now WAKE (join hunt) when shot or within wakeR; calibrated args `--aim 1.6 --wakeR 40` reproduce real gaps (b31-b20 = +0.52 sim vs +0.5 real; b32<b31 both). Sim level ~0.6 below real. Variant sweep on b31: nothing beats it beyond noise; FFA h2h b31 ~= aggressive. Use these args for all future sim tests.
 COMPETITOR STUDY (Sat ~13:00): 238 public Mech Royale repos; teams stating 5.1-5.8 converge on: selective fights (~60 m engage, don't wake idle house bots), heal to ~95% before re-engaging, escape when 2 enemies hit us, laser timing/partial lethal shots, uncontested drops. Ideas only, no code copied.
@@ -81,7 +82,8 @@ Noise: the same build varies about ±0.3 between runs (2.38 vs 2.71), so single-
 | 85b7a04 | main = batch 31 behaviour | - |
 | c6193f0 | Batch 33: 31 + giddy-style wide engage, fight boost >40 (practice only), lethal partial laser, lock 200 | practice 3.79; LIVE FFA 8.75 (b31: 11.75) |
 | 5caece0 | Batch 34: 33 in practice, batch 31 behaviour once FFA detected | practice 3.98; LIVE FFA 10.38 |
-| (HEAD) | main = batch 31 exact params (best on practice 4.52 AND live FFA 11.75) | - |
+| 61dddbe | main = batch 31 exact params (best on practice 4.52 AND live FFA 11.75) | - |
+| (next) | Batch 35: 31 + fight-odds flee (own logistic model, sim/fights.ts; retreat if P(win)<0.45, practice only) | sim neutral |
 Qualifying tip: only the best practice score counts and runs vary +-0.3, so resubmitting the best build (2e74457) can draw a higher score.
 
 Baseline to beat: 1.15.

@@ -180,6 +180,32 @@ export class Turtle {
     return best
   }
 
+  /** P(we win this fight), logistic model fitted on 903 calibrated-sim fights (sim/fights.ts). */
+  fightOdds(m: ActorObs, obs: Observation): number {
+    const me = obs.self, pos = me.pos, w = this.p.oddsW
+    const others = obs.mechs.filter(
+      (o) => o.kind === "mech" && o.id !== m.id && hdist(o.pos, pos) < 220 && (!this.map || this.map.los([o.pos[0], o.pos[1], o.pos[2] + 8], [pos[0], pos[1], pos[2] + 4.5])),
+    ).length
+    const back = Math.abs(wrap(m.aim[0] - yawTo(m.pos, pos))) > Math.PI / 2 ? 1 : 0
+    const z =
+      w.b0 +
+      w.lhp * Math.log(Math.max(me.hp, 1) / Math.max(m.hp ?? 1400, 1)) +
+      w.cubes * ((Math.min(me.cubes, 10) - Math.min(m.cubes ?? 0, 10)) / 10) +
+      w.weap * (me.weapons.filter((x) => x).length - Math.max(1, (m.weapons ?? []).length)) +
+      w.others * others +
+      w.dist * (hdist(m.pos, pos) / 100) +
+      w.back * back
+    return 1 / (1 + Math.exp(-z))
+  }
+
+  /** Practice only: start fights we expect to win (healthy, in range, good odds). */
+  goodOdds(m: ActorObs, obs: Observation): boolean {
+    if (!(this.p.oddsEngage > 0) || this.ffa) return false
+    const me = obs.self
+    if (me.hp / me.max_hp < 0.5 || hdist(m.pos, me.pos) > this.p.oddsRange) return false
+    return this.fightOdds(m, obs) >= this.p.oddsEngage
+  }
+
   /** Extra reasons to start a fight (giddy-style selective engagement). */
   wantsFight(m: ActorObs, pos: V3): boolean {
     if (!this.p.wideEngage) return false
@@ -397,7 +423,8 @@ export class Turtle {
           (!this.healing &&
             (hdist(m.pos, pos) <= this.p.engageRange ||
               (m.hp ?? 1e9) < this.p.finishHp * (m.max_hp ?? 1400) ||
-              this.wantsFight(m, pos)))), // close, nearly dead, approaching, weak-in-range, or aiming at us
+              this.wantsFight(m, pos) ||
+              this.goodOdds(m, obs)))), // close, nearly dead, approaching, weak-in-range, aiming at us, or a fight we expect to win
     )
     const npcs = obs.mechs.filter((m) => m.kind === "npc")
     let target: ActorObs | null = null
@@ -524,7 +551,9 @@ export class Turtle {
       const gunDown = !gun || (gun.reload ?? 0) > 0 || (gun.ammo ?? 1) === 0
       const otherReady =
         (laser && laser.cooldown <= 0.2) || (lightning && d < lightning.stats.range && me.energy > this.p.lightningEnergyFloor)
-      const losing = me.hp / me.max_hp < this.p.retreatHp && (target.hp ?? 1400) > me.hp * 1.1
+      const losing =
+        (me.hp / me.max_hp < this.p.retreatHp && (target.hp ?? 1400) > me.hp * 1.1) ||
+        (this.p.oddsFlee > 0 && !this.ffa && (target.hp ?? 1e9) > this.p.finishHp * (target.max_hp ?? 1400) && this.fightOdds(target, obs) < this.p.oddsFlee)
       const needCover = (gunDown && !otherReady) || losing
       // reuse a recent cover point; search again at most every 0.5 s and only with time left this tick
       if (needCover && (t - this.coverT > 0.5 || !this.cover) && !this.late()) (this.cover = this.findCover(pos, target.pos)), (this.coverT = t)

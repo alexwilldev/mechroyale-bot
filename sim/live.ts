@@ -19,6 +19,10 @@ for (const kv of (args.set ?? "").split(",").filter(Boolean)) {
   const [k, v] = kv.split("=")
   over[k] = v === "true" ? true : v === "false" ? false : Number(v)
 }
+// --cmd "<command...>": bridge an external bot process (stdin/stdout JSON lines) instead of our in-process bot.
+// --mapdir: map path to put in hello for that process (e.g. /arena inside a docker sandbox).
+const CMD: string[] | null = args.cmd ? args.cmd.split(" ").filter(Boolean) : null
+const MAPDIR = args.mapdir ?? "kit/arena"
 const hex = (n: number) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, "0")).join("")
 
 function playOne(): Promise<any> {
@@ -30,6 +34,7 @@ function playOne(): Promise<any> {
       headers: { Origin: `https://${HOST}`, "User-Agent": "mech-bot-tester" },
     } as any)
     let bot: Turtle | null = null
+    let proc: any = null
     let started = false
     const out: any = { tag: TAG, room, place: null, kills: null, t: 0, dealt: 0, taken: 0, maxMs: 0 }
     const timer = setTimeout(() => {
@@ -50,6 +55,37 @@ function playOne(): Promise<any> {
           started = true
           setTimeout(() => send({ type: "start" }), 500)
         }
+      } else if (m.type === "hello" && CMD) {
+        m.map.dir = MAPDIR
+        proc = Bun.spawn(CMD, { stdin: "pipe", stdout: "pipe", stderr: "ignore" })
+        ;(async () => {
+          const dec = new TextDecoder()
+          let buf = ""
+          for await (const chunk of proc!.stdout as any) {
+            buf += dec.decode(chunk)
+            let k
+            while ((k = buf.indexOf("\n")) >= 0) {
+              const line = buf.slice(0, k).trim()
+              buf = buf.slice(k + 1)
+              if (!line) continue
+              try {
+                const a = JSON.parse(line)
+                if (a.type !== "ready") ws.send(line)
+              } catch {}
+            }
+          }
+        })()
+        proc.stdin.write(JSON.stringify(m) + "\n")
+        proc.stdin.flush()
+        send({ type: "loaded" })
+      } else if (m.type === "obs" && CMD && proc) {
+        out.t = m.t
+        for (const e of m.events ?? []) {
+          if (e.type === "hit" && e.target < 16) out.dealt += e.amount
+          if (e.type === "damaged") out.taken += e.amount
+        }
+        proc.stdin.write(JSON.stringify(m) + "\n")
+        proc.stdin.flush()
       } else if (m.type === "hello") {
         m.map.dir = "kit/arena"
         bot = new Turtle(m, over as any)
@@ -72,6 +108,10 @@ function playOne(): Promise<any> {
         draw.take()
         send({ ...a, tick: m.tick })
       } else if (m.type === "end") {
+        try {
+          proc?.stdin.write(JSON.stringify(m) + "\n")
+          proc?.stdin.end()
+        } catch {}
         out.place = m.place
         out.kills = m.kills
         clearTimeout(timer)

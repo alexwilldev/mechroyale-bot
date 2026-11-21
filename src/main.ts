@@ -50,6 +50,9 @@ class Turtle {
   nav: Nav | null = null
   route: { goal: V3; pts: number[][]; t: number } | null = null
   maxMs = 0
+  lastTarget = -1
+  roam: V3 | null = null
+  roamUntil = 0
 
   constructor(h: Hello) {
     this.cfg = h.config
@@ -105,6 +108,26 @@ class Turtle {
     return [Math.cos(y), Math.sin(y)]
   }
 
+  /** A nearby walkable point hidden from `threat` (by buildings), or null. */
+  findCover(pos: V3, threat: V3): V3 | null {
+    if (!this.map || !this.nav) return null
+    const eye = [threat[0], threat[1], threat[2] + 8]
+    const away = yawTo(threat, pos)
+    let best: V3 | null = null, bestCost = Infinity
+    for (const r of [10, 18, 28])
+      for (let k = 0; k < 12; k++) {
+        const a = (k / 12) * TAU
+        const x = pos[0] + Math.cos(a) * r, y = pos[1] + Math.sin(a) * r
+        if (!this.nav.isFree(x, y) || !this.nav.lineFree(pos[0], pos[1], x, y)) continue
+        const zc = this.map.surfaceAt(x, y, pos[2] + 2)
+        if (this.map.los(eye, [x, y, zc + 4.5])) continue
+        // prefer short moves that don't run toward the threat
+        const cost = r + 15 * Math.abs(wrap(a - away))
+        if (cost < bestCost) (bestCost = cost), (best = [x, y, zc])
+      }
+    return best
+  }
+
   /** Clear shot line from muzzle to point (true when no map). */
   clear(a: V3, b: V3): boolean {
     return !this.map || this.map.los(a, b)
@@ -146,9 +169,18 @@ class Turtle {
     const mechs = obs.mechs.filter((m) => m.kind === "mech")
     const npcs = obs.mechs.filter((m) => m.kind === "npc")
     let target: ActorObs | null = null
-    const attacker = mechs.find((m) => m.id === this.lastDamage.by && t - this.lastDamage.t < 3)
-    if (attacker) target = attacker
-    else if (mechs.length) target = mechs.reduce((a, b) => (hdist(a.pos, pos) < hdist(b.pos, pos) ? a : b))
+    if (mechs.length) {
+      // focus fire: weakest reachable enemy, strongly preferring ones we can actually shoot
+      const eyeP = [pos[0], pos[1], pos[2] + (me.stats.muzzle_height ?? 7)]
+      const score = (m: ActorObs) =>
+        (m.hp ?? 1400) +
+        hdist(m.pos, pos) * P.targetDistW -
+        (m.id === this.lastDamage.by && t - this.lastDamage.t < 3 ? 250 : 0) -
+        (m.id === this.lastTarget ? 150 : 0) +
+        (this.clear(eyeP, [m.pos[0], m.pos[1], m.pos[2] + 4.5]) ? 0 : 900)
+      target = mechs.reduce((a, b) => (score(a) <= score(b) ? a : b))
+      this.lastTarget = target.id
+    }
     const quiet = !target && t - this.lastDamage.t > 3
     let crateTarget: { id: number; pos: V3; hp?: number } | null = null
     if (!target) {
@@ -178,29 +210,63 @@ class Turtle {
       goal = nc
       state = "rotate"
     } else if (quiet) {
+      // early game the whole current circle is fair game; later only what is inside the next one
+      const zc = [z.center[0], z.center[1], 0]
+      const early = t < z.shrink_start - 10
+      const inPlay = (p: V3) => (early ? hdist(p, zc) < z.radius * 0.9 : hdist(p, nc) < z.next_radius * 0.9)
       const loot = [
-        ...obs.cubes.map((c) => ({ pos: c.pos, w: 1 })),
-        ...obs.pickups.filter((p) => this.wantPickup(me.weapons, p.kind) > 0).map((p) => ({ pos: p.pos, w: 1.5 })),
+        ...obs.cubes.filter((c) => hdist(c.pos, pos) < P.lootDetour).map((c) => ({ pos: c.pos, w: 1.2 })),
+        ...obs.pickups
+          .filter((p) => this.wantPickup(me.weapons, p.kind) > 0 && hdist(p.pos, pos) < P.pickupDetour)
+          .map((p) => ({ pos: p.pos, w: 1 + P.weaponScore[p.kind] })),
+        ...(crateTarget && hdist(crateTarget.pos, pos) > 25 ? [{ pos: crateTarget.pos, w: 0.8 }] : []),
       ]
-        .filter((l) => hdist(l.pos, pos) < P.lootDetour && hdist(l.pos, nc) < z.next_radius)
+        .filter((l) => inPlay(l.pos) && Math.abs(l.pos[2] - pos[2]) < 6)
         .sort((a, b) => hdist(a.pos, pos) / a.w - hdist(b.pos, pos) / b.w)[0]
       if (loot) {
         goal = loot.pos
         state = "loot"
+      } else if (!me.weapons[1] || t < P.roamUntilT) {
+        // roam inside the safe area to find weapons and crates
+        if (!this.roam || t > this.roamUntil || hdist(pos, this.roam) < 8) {
+          const a = Math.random() * TAU, r = Math.sqrt(Math.random()) * z.next_radius * 0.6
+          this.roam = [z.next_center[0] + Math.cos(a) * r, z.next_center[1] + Math.sin(a) * r, 0]
+          this.roamUntil = t + 20
+        }
+        goal = this.roam
+        state = "roam"
       }
     }
 
     let mv = [0, 0]
     if (goal) mv = this.steer(pos, goal, t)
     if (target && target.kind === "mech") {
-      // strafe perpendicular to the target, biased toward the goal
-      if (t > this.strafeUntil) {
-        this.strafeSign = Math.random() < 0.5 ? -1 : 1
-        this.strafeUntil = t + P.strafeFlip * (0.6 + Math.random() * 0.8)
+      const d = hdist(pos, target.pos)
+      const ty0 = yawTo(pos, target.pos)
+      const slots0 = me.weapons
+      const gun = slots0.find((w) => w?.kind === "gun")
+      const lightning = slots0.find((w) => w?.kind === "lightning")
+      const laser = slots0.find((w) => w?.kind === "laser")
+      const gunDown = !gun || (gun.reload ?? 0) > 0 || (gun.ammo ?? 1) === 0
+      const otherReady =
+        (laser && laser.cooldown <= 0.2) || (lightning && d < lightning.stats.range && me.energy > P.lightningEnergyFloor)
+      const losing = me.hp / me.max_hp < P.retreatHp && (target.hp ?? 1400) > me.hp * 1.1
+      const cover = (gunDown && !otherReady) || losing ? this.findCover(pos, target.pos) : null
+      if (cover && state !== "endgame") {
+        mv = this.steer(pos, cover, t)
+        state = losing ? "retreat" : "reload-cover"
+      } else {
+        if (t > this.strafeUntil) {
+          this.strafeSign = Math.random() < 0.5 ? -1 : 1
+          this.strafeUntil = t + P.strafeFlip * (0.6 + Math.random() * 0.8)
+        }
+        // hold our weapon's best range: close in with lightning, keep gun/laser distance otherwise
+        const want = lightning && me.energy > 25 ? P.lightningRange : P.gunRange
+        const radial = Math.max(-1, Math.min(1, (d - want) / (want * 0.5)))
+        const py = ty0 + (this.strafeSign * Math.PI) / 2
+        mv = [mv[0] * 0.4 + Math.cos(py) + radial * Math.cos(ty0), mv[1] * 0.4 + Math.sin(py) + radial * Math.sin(ty0)]
+        state = state === "endgame" ? "endgame-fight" : "fight"
       }
-      const ty = yawTo(pos, target.pos) + (this.strafeSign * Math.PI) / 2
-      mv = [mv[0] * 0.6 + Math.cos(ty), mv[1] * 0.6 + Math.sin(ty)]
-      state = state === "endgame" ? "endgame-fight" : "fight"
     }
 
     // --- stuck handling: commanded move but not moving -> jump/jet and sidestep ---
@@ -283,7 +349,7 @@ class Turtle {
       let yaw: number
       if (t - this.lastDamage.t < P.threatMemory) yaw = this.lastDamage.bearing
       else if (t - this.lastSound.t < 2) yaw = this.lastSound.bearing
-      else if (n > 0.3) yaw = Math.atan2(mv[1], mv[0])
+      else if (n > 0.3) yaw = Math.atan2(mv[1], mv[0]) + Math.sin(t * 1.7) * 0.9 // sweep while walking
       else yaw = this.scanYaw += 0.12
       act.aim = [yaw, 0]
     }

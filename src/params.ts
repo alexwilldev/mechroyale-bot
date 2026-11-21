@@ -25,7 +25,7 @@ export const P = {
   attackerBonus: 250, // target bonus for whoever damaged us in the last 3 s
   rearBonus: 0, // extra target bonus for whoever hit us in the back in the last 2 s
   spreadBackoff: 0, // move away from the enemy centroid when they spread >90° around us (0 = off) // target score bonus for staying on the current target (finish kills before they regen) // target score: hp + dist * this (lower = preferred)
-  retreatHp: 0, // EXPERIMENT B: never retreat
+  retreatHp: 0.35, // break line of sight below this hp fraction when the enemy has more hp
   gunRange: 90, // batch 20
   laserRange: 110, // REAL best (batch 20: 4.13). 255->3.42 230->3.79 150->3.85/3.60 80->3.69 50->4.04
   lightningRange: 130, // REAL batch 23 (lightning on) 3.65 < batch 20: keep it off
@@ -52,7 +52,7 @@ export const P = {
   dropLate: 12, // s: still go if we arrive at most this long after it lands
   reloadBelow: 0.5, // reload when no clear shot and the magazine is below this fraction
   npcHuntHp: 0.65, // only start fights with NPC drones above this hp fraction
-  recoverHp: 0.4, // EXPERIMENT B
+  recoverHp: 0.6, // below this hp fraction with no enemy in sight: hold still and regenerate
   laserDodgeYaw: 0.15, // rad: an enemy charging a laser aimed this close to us -> dodge sideways
   dodgeEnergy: 20,
   useRoofs: true, // camp on rooftops when idle

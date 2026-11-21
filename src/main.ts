@@ -53,6 +53,7 @@ export class Turtle {
   maxMs = 0
   lastTarget = -1
   lastPlanT = -99
+  rearBy = { id: -1, t: -99 }
   visited = new Set<string>()
   explore: V3 | null = null
   exploreT = 0
@@ -253,7 +254,10 @@ export class Turtle {
     // --- bookkeeping: events, sounds, mode detection ---
     let killsNow = 0
     for (const e of obs.events) {
-      if (e.type === "damaged" && e.bearing != null) this.lastDamage = { t, bearing: e.bearing, by: e.by }
+      if (e.type === "damaged" && e.bearing != null) {
+        this.lastDamage = { t, bearing: e.bearing, by: e.by }
+        if (e.rear && e.by != null) this.rearBy = { id: e.by, t }
+      }
       if (e.type === "kill") killsNow++
     }
     this.kills += killsNow
@@ -313,7 +317,8 @@ export class Turtle {
       const score = (m: ActorObs) =>
         (m.hp ?? 1400) +
         hdist(m.pos, pos) * this.p.targetDistW -
-        (m.id === this.lastDamage.by && t - this.lastDamage.t < 3 ? 250 : 0) -
+        (m.id === this.lastDamage.by && t - this.lastDamage.t < 3 ? this.p.attackerBonus : 0) -
+        (m.id === this.rearBy.id && t - this.rearBy.t < 2 ? this.p.rearBonus : 0) -
         (m.id === this.lastTarget ? this.p.lockBonus : 0) +
         (this.clear(eyeP, [m.pos[0], m.pos[1], m.pos[2] + 4.5]) ? 0 : 900)
       target = mechs.reduce((a, b) => (score(a) <= score(b) ? a : b))
@@ -450,6 +455,21 @@ export class Turtle {
         const radial = Math.max(-1, Math.min(1, (d - want) / (want * 0.5)))
         const py = ty0 + (this.strafeSign * Math.PI) / 2
         mv = [mv[0] * 0.4 + Math.cos(py) + radial * Math.cos(ty0), mv[1] * 0.4 + Math.sin(py) + radial * Math.sin(ty0)]
+        // several enemies spread around us: back away from them so they all fall inside our front arc
+        if (this.p.spreadBackoff > 0 && mechs.length > 1) {
+          let sx = 0, sy = 0, maxOff = 0
+          for (const o of mechs) {
+            const a = yawTo(pos, o.pos)
+            sx += Math.cos(a)
+            sy += Math.sin(a)
+            maxOff = Math.max(maxOff, Math.abs(wrap(a - ty0)))
+          }
+          if (maxOff > Math.PI / 2) {
+            const away = Math.atan2(-sy, -sx)
+            mv = [mv[0] + Math.cos(away) * this.p.spreadBackoff, mv[1] + Math.sin(away) * this.p.spreadBackoff]
+            state = "fight-spread"
+          }
+        }
         state = state === "endgame" ? "endgame-fight" : "fight"
       }
     }

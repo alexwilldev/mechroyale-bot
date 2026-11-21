@@ -21,10 +21,13 @@ export const P = {
   laserDetourEarly: 400, // m: in the first minute, go further for a laser
   laserScanSpin: 0.35, // rad per decision to spin the torso while unarmed and idle (0 = off)
   laserScanUntil: 150, // s // m: go fetch a remembered laser this far, even mid-fight
-  lockBonus: 150, // target score bonus for staying on the current target (finish kills before they regen) // target score: hp + dist * this (lower = preferred)
+  lockBonus: 150,
+  attackerBonus: 250, // target bonus for whoever damaged us in the last 3 s
+  rearBonus: 0, // extra target bonus for whoever hit us in the back in the last 2 s
+  spreadBackoff: 0, // move away from the enemy centroid when they spread >90° around us (0 = off) // target score bonus for staying on the current target (finish kills before they regen) // target score: hp + dist * this (lower = preferred)
   retreatHp: 0.35, // break line of sight below this hp fraction when the enemy has more hp
   gunRange: 130, // sim: 130 m beats 90 m by ~+0.5
-  laserRange: 230, // sim sweep: 200-230 best (+0.3-0.5 over 150) // m: preferred distance when holding a laser // m: preferred fighting distance with gun/laser
+  laserRange: 255, // sim: 255 > 230 by +0.15 on all 3 seed sets (outside house 200 m vision, inside 280 m laser range) // m: preferred distance when holding a laser // m: preferred fighting distance with gun/laser
   lightningRange: 130, // sim: closing in for lightning loses points; effectively disabled // m: preferred distance when lightning is charged up
   farmCubes: 0, // keep roaming for crates/drones/cubes until we hold this many cubes
   farmUntilT: 230, // ...or until this time

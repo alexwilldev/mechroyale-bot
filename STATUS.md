@@ -5,6 +5,7 @@ Full plan: `~/.claude/plans/create-a-plan-to-vast-sifakis.md`. Cutoff **Sun 11:0
 ## Current phase
 SIMULATOR BUILT (sim/sim.ts + sim/run.ts). Calibrated: old build scores ~3.4 in sim vs ~3.5 real. Usage:
 `bun sim/run.ts --n 100 --seed 5 [--set key=val,...] [--start laser] [--svg /tmp/x.svg]` (100 matches ~25 s).
+Rear-damage round: rearBonus/attackerBonus/spreadBackoff all within noise (not used). laserRange 255 +0.15 consistent.
 Sim research round (Fri 23:00): practice params are at a local optimum (20+ variants within noise of base 4.95 over 3 seed sets). Boost-strafing matters (-0.66 if off). Laser from start = 6.05 ceiling but exploring for lasers didn't help (availability-limited). FFA: aggressive bot ~9 pts (6-7th of 16); passive engageRange=60 inconsistent (+0.7/-0.84/0.0) -> not used. Per-bot params: Turtle(h, overrides); FFA head-to-head: --mode ffa --ours 4 --nb 4 --b k=v. Sweep helpers in sim/sweep/.
 Sim findings (earlier): laser from start = 5.5 pts (vs 3.6) -> getting a laser early is THE lever; gun range 130 > 90 (+0.5); strong target lock hurts; roofs/boost/retreat/recover ~no effect; lightning closing hurts.
 PIVOT (user call): sim paused; shipping combat batches straight to the real scorer. No match replays are available, so the scorer is the only feedback.
@@ -50,7 +51,8 @@ Noise: the same build varies about ±0.3 between runs (2.38 vs 2.71), so single-
 | bab1cad | Batch 14: batch 13 + boost-strafing in fights (on >80 energy, off <45) | ? (x2) |
 | 6c937e2 | Batch 15: batch 14 + rooftop camping when idle | 3.52 (one of 14/15; user: 'def not the move') |
 | e283e74 | Batch 16 (SIM-DRIVEN): laser seeking mid-fight, weapon pref laser>mortar>lightning, gun range 130 m | 3.85 real (best; 51st, leader 5.48); sim 4.3 |
-| (next) | Batch 17: + scan spin, early 400 m laser detour, laserRange 230, strafeFlip 0.6 | sim 4.94 (2 seeds) |
+| f187fcd | Batch 17: + scan spin, early 400 m laser detour, laserRange 230, strafeFlip 0.6 | sim 4.95 (3 seeds) |
+| (next) | Batch 18: laserRange 255 (+ per-bot params infra; rear/spread/explore/FFA-switch present but OFF) | sim 5.10 (3 seeds) |
 
 Baseline to beat: 1.15.
 

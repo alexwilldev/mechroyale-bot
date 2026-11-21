@@ -26,8 +26,8 @@ export const P = {
   rearBonus: 0, // extra target bonus for whoever hit us in the back in the last 2 s
   spreadBackoff: 0, // move away from the enemy centroid when they spread >90° around us (0 = off) // target score bonus for staying on the current target (finish kills before they regen) // target score: hp + dist * this (lower = preferred)
   retreatHp: 0.35, // break line of sight below this hp fraction when the enemy has more hp
-  gunRange: 130, // sim: 130 m beats 90 m by ~+0.5
-  laserRange: 150, // REAL: 150 -> 3.85, 230 -> 3.79, 255 -> 3.42 (sim said the opposite: sim overfits range)
+  gunRange: 90, // batch 20 test
+  laserRange: 110, // batch 20 test: shorter than batch 16
   lightningRange: 130, // sim: closing in for lightning loses points; effectively disabled // m: preferred distance when lightning is charged up
   farmCubes: 0, // keep roaming for crates/drones/cubes until we hold this many cubes
   farmUntilT: 230, // ...or until this time

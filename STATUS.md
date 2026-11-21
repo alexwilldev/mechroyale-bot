@@ -51,8 +51,10 @@ Noise: the same build varies about ±0.3 between runs (2.38 vs 2.71), so single-
 | bab1cad | Batch 14: batch 13 + boost-strafing in fights (on >80 energy, off <45) | ? (x2) |
 | 6c937e2 | Batch 15: batch 14 + rooftop camping when idle | 3.52 (one of 14/15; user: 'def not the move') |
 | e283e74 | Batch 16 (SIM-DRIVEN): laser seeking mid-fight, weapon pref laser>mortar>lightning, gun range 130 m | 3.85 real (best; 51st, leader 5.48); sim 4.3 |
-| f187fcd | Batch 17: + scan spin, early 400 m laser detour, laserRange 230, strafeFlip 0.6 | sim 4.95 (3 seeds) |
-| (next) | Batch 18: laserRange 255 (+ per-bot params infra; rear/spread/explore/FFA-switch present but OFF) | sim 5.10 (3 seeds) |
+| f187fcd | Batch 17: + scan spin, early 400 m laser detour, laserRange 230, strafeFlip 0.6 | REAL 3.79 (sim 4.95) |
+| fa72632 | Batch 18: laserRange 255 | REAL 3.42 (sim 5.10) -> SIM DOES NOT PREDICT RANGE EFFECTS; 59th, leader 5.58 |
+| 630fbd73ad6099db80eb5975dc72ad526ec88fe4 | Batch 19: laserRange back to 150 (batch 16 ranges) | ? |
+| (next) | Batch 20: laserRange 110, gunRange 90 | ? |
 
 Baseline to beat: 1.15.
 

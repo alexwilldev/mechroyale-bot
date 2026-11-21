@@ -24,7 +24,8 @@ export const P = {
   lightningEnergyFloor: 12,
   replanEvery: 1.5, // s between A* replans toward the same goal
   minReplan: 0.5, // s: hard floor between A* runs, whatever the reason
-  maxExpand: 8000, // A* expansion cap per plan (bounds worst-case tick time)
+  softBudgetMs: 12, // past this many ms in a tick, skip optional work
+  maxExpand: 5000, // A* expansion cap per plan (bounds worst-case tick time)
   laserLead: 0.1, // s: lead for hitscan laser (aim command latency)
   holdSamples: 12, // candidate spots tried when picking a covered hold position
   holdSearch: 45, // m: how far from current position to look for it

@@ -52,6 +52,13 @@ export class Turtle {
   maxMs = 0
   lastTarget = -1
   lastPlanT = -99
+  t0 = 0
+  cover: V3 | null = null
+  coverT = -99
+  /** Over the soft per-tick budget: skip optional work (replans, cover/hold searches). */
+  late() {
+    return performance.now() - this.t0 > P.softBudgetMs
+  }
   hold: V3 | null = null
   holdUntil = 0
   dodgeSign = 1
@@ -96,7 +103,7 @@ export class Turtle {
     }
     const r = this.route
     const stale = !r || hdist(r.goal, goal) > 6 || t - r.t > P.replanEvery || !r.pts.length || hdist(pos, r.pts[0]) > 12
-    if (stale && t - this.lastPlanT >= P.minReplan) {
+    if (stale && t - this.lastPlanT >= P.minReplan && !this.late()) {
       this.lastPlanT = t
       const pts = nav.path(pos[0], pos[1], goal[0], goal[1], P.maxExpand, true)
       this.route = pts && pts.length ? { goal: [...goal], pts, t } : null
@@ -176,6 +183,7 @@ export class Turtle {
 
   act(obs: Observation): BotAction {
     const t0 = performance.now()
+    this.t0 = t0
     const me = obs.self
     const t = obs.t
     const pos = me.pos
@@ -296,8 +304,8 @@ export class Turtle {
         // nothing to do: wait at a nearby spot that few directions can see (next to buildings)
         // re-search at most every 10 s (a failed search must not retry every tick)
         if (t > this.holdUntil || (this.hold && hdist(this.hold, nc) > z.next_radius * P.zoneSafety)) {
-          this.hold = this.findHoldSpot(pos, nc, z.next_radius * P.zoneSafety)
-          this.holdUntil = t + 10
+          if (this.late()) this.holdUntil = t + 0.5 // out of time this tick: try again shortly
+          else (this.hold = this.findHoldSpot(pos, nc, z.next_radius * P.zoneSafety)), (this.holdUntil = t + 10)
         }
         if (this.hold && hdist(pos, this.hold) > 3) goal = this.hold
         state = "hold"
@@ -317,7 +325,10 @@ export class Turtle {
       const otherReady =
         (laser && laser.cooldown <= 0.2) || (lightning && d < lightning.stats.range && me.energy > P.lightningEnergyFloor)
       const losing = me.hp / me.max_hp < P.retreatHp && (target.hp ?? 1400) > me.hp * 1.1
-      const cover = (gunDown && !otherReady) || losing ? this.findCover(pos, target.pos) : null
+      const needCover = (gunDown && !otherReady) || losing
+      // reuse a recent cover point; search again at most every 0.5 s and only with time left this tick
+      if (needCover && (t - this.coverT > 0.5 || !this.cover) && !this.late()) (this.cover = this.findCover(pos, target.pos)), (this.coverT = t)
+      const cover = needCover ? this.cover : null
       if (cover && state !== "endgame") {
         mv = this.steer(pos, cover, t)
         state = losing ? "retreat" : "reload-cover"

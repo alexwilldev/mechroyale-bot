@@ -25,6 +25,7 @@ Phase 0 + Phase 1 done → next: **Phase 2 (sandbox sim)**, then Phase 3 (combat
 3. Phase 3 combat: tracker, cover use (peek/shoot), facing the threat for rear armor, laser dodge.
 
 ## Submissions (commit → practice score)
+Noise: the same build varies about ±0.3 between runs (2.38 vs 2.71), so single-run differences under ~0.3 are not meaningful.
 | commit | what | score |
 | --- | --- | --- |
 | 17115f2/4414355 | Phase 0 turtle / Phase 1 map+nav | 2.38, 2.71 (17th; leader 4.77) |
@@ -35,7 +36,8 @@ Phase 0 + Phase 1 done → next: **Phase 2 (sandbox sim)**, then Phase 3 (combat
 | 5856b5c | Batch 5: offense-weighted upgrade order | ? |
 | 496d0d5 | Batch 6: idle -> wait at a covered spot (fewest open sight lines) inside the safe circle | ? |
 | ad00bb3 | Batch 7: only start NPC-drone fights above 65% hp | ? |
-| (next) | Batch 8: reload when no clear shot and mag < 50% | ? |
+| 2cecc16 | Batch 8: reload when no clear shot and mag < 50% | 3.35 (25th), scorer showed 69 ms wait |
+| (next) | Batch 9: 12 ms soft per-tick budget (skip replans/cover/hold searches when late), cover cached 0.5 s, A* cap 5k | ? |
 
 Baseline to beat: 1.15.
 

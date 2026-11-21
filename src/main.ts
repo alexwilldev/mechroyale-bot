@@ -52,6 +52,8 @@ export class Turtle {
   maxMs = 0
   lastTarget = -1
   lastPlanT = -99
+  hold: V3 | null = null
+  holdUntil = 0
   dodgeSign = 1
   dodgeFlipT = 0
   roam: V3 | null = null
@@ -110,6 +112,27 @@ export class Turtle {
       }
     const y = yawTo(pos, aimPt)
     return [Math.cos(y), Math.sin(y)]
+  }
+
+  /** Walkable point near pos (inside the safe circle) with the fewest open sight lines around it. */
+  findHoldSpot(pos: V3, center: V3, safeR: number): V3 | null {
+    if (!this.map || !this.nav) return null
+    let best: V3 | null = null, bestCost = Infinity
+    for (let k = 0; k < P.holdSamples; k++) {
+      const a = Math.random() * TAU, r = k === 0 ? 0 : 6 + Math.random() * P.holdSearch
+      const x = pos[0] + Math.cos(a) * r, y = pos[1] + Math.sin(a) * r
+      if (hdist([x, y], center) > safeR || !this.nav.isFree(x, y)) continue
+      const s = this.map.surfaceAt(x, y, pos[2] + 2)
+      const eye = [x, y, s + 8]
+      let open = 0
+      for (let d = 0; d < 8; d++) {
+        const b = (d / 8) * TAU
+        if (this.map.los(eye, [x + Math.cos(b) * P.holdRay, y + Math.sin(b) * P.holdRay, s + 8], 1)) open++
+      }
+      const cost = open * 10 + r * 0.3
+      if (cost < bestCost) (bestCost = cost), (best = [x, y, s])
+    }
+    return best
   }
 
   /** A supply drop worth going for: close enough to reach about when it lands, not held by someone else. */
@@ -265,6 +288,15 @@ export class Turtle {
         }
         goal = this.roam
         state = "roam"
+      } else {
+        // nothing to do: wait at a nearby spot that few directions can see (next to buildings)
+        // re-search at most every 10 s (a failed search must not retry every tick)
+        if (t > this.holdUntil || (this.hold && hdist(this.hold, nc) > z.next_radius * P.zoneSafety)) {
+          this.hold = this.findHoldSpot(pos, nc, z.next_radius * P.zoneSafety)
+          this.holdUntil = t + 10
+        }
+        if (this.hold && hdist(pos, this.hold) > 3) goal = this.hold
+        state = "hold"
       }
     }
 

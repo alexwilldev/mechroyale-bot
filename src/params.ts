@@ -26,6 +26,9 @@ export const P = {
   minReplan: 0.5, // s: hard floor between A* runs, whatever the reason
   maxExpand: 8000, // A* expansion cap per plan (bounds worst-case tick time)
   laserLead: 0.1, // s: lead for hitscan laser (aim command latency)
+  holdSamples: 12, // candidate spots tried when picking a covered hold position
+  holdSearch: 45, // m: how far from current position to look for it
+  holdRay: 50, // m: sight-line length used to measure exposure
   dropRange: 170, // m: go for supply drops this close when no enemy is in sight
   dropLate: 12, // s: still go if we arrive at most this long after it lands
   recoverHp: 0.6, // below this hp fraction with no enemy in sight: hold still and regenerate

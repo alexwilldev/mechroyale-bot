@@ -3,9 +3,11 @@ export const P = {
   // Upgrade priority, first available wins. Ids from hello.config.upgrades.
   upgradeOrder: [
     // practice placement = hunters killed before we die, so offense ranks high; plating stays first (also wins the final-zone HP race)
-    "plating", "laser_damage", "gun_damage", "laser_charge", "armor", "gun_rate", "lightning_efficiency",
-    "mortar_reload", "nanites", "gun_mag", "gyros", "lightning_range", "gun_velocity", "lightning_chain",
-    "mortar_velocity", "mortar_splash", "sensors", "laser_pierce", "reactor", "capacitor", "jets", "servos",
+    // EXPERIMENT A: original defensive order (plating, armor, nanites first)
+    "plating", "armor", "nanites", "gun_damage", "laser_damage", "gun_rate", "laser_charge",
+    "lightning_efficiency", "mortar_reload", "gyros", "gun_mag", "gun_velocity", "lightning_range",
+    "lightning_chain", "mortar_velocity", "mortar_splash", "laser_pierce", "sensors", "reactor",
+    "capacitor", "jets", "servos",
   ],
   // Weapon preference for the second slot (higher = better).
   weaponScore: { laser: 3, mortar: 2, lightning: 1, gun: 0 } as Record<string, number>, // sim: laser +1.9 pts, mortar +0.3, lightning -0.2

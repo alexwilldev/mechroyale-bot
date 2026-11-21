@@ -8,7 +8,7 @@ export const P = {
     "mortar_velocity", "mortar_splash", "sensors", "laser_pierce", "reactor", "capacitor", "jets", "servos",
   ],
   // Weapon preference for the second slot (higher = better).
-  weaponScore: { laser: 3, mortar: 2, lightning: 1, gun: 0 } as Record<string, number>, // sim: laser +1.9 pts, mortar +0.3, lightning -0.2
+  weaponScore: { laser: 3, lightning: 2, mortar: 1, gun: 0 } as Record<string, number>, // sim: laser +1.9 pts, mortar +0.3, lightning -0.2
   lootDetour: 80, // m: walk to visible cubes this close when no threat
   pickupDetour: 160, // m: walk to wanted weapon pickups this close when no threat
   targetDistW: 4,
@@ -26,9 +26,9 @@ export const P = {
   rearBonus: 0, // extra target bonus for whoever hit us in the back in the last 2 s
   spreadBackoff: 0, // move away from the enemy centroid when they spread >90° around us (0 = off) // target score bonus for staying on the current target (finish kills before they regen) // target score: hp + dist * this (lower = preferred)
   retreatHp: 0.35, // break line of sight below this hp fraction when the enemy has more hp
-  gunRange: 45, // batch 22
-  laserRange: 50, // batch 22 tests close range
-  lightningRange: 130, // sim: closing in for lightning loses points; effectively disabled // m: preferred distance when lightning is charged up
+  gunRange: 90, // batch 20
+  laserRange: 110, // REAL best (batch 20: 4.13). 255->3.42 230->3.79 150->3.85/3.60 80->3.69 50->4.04
+  lightningRange: 28, // batch 23: lightning back on for close fights (sim disliked it; real board favours closer fights)
   farmCubes: 0, // keep roaming for crates/drones/cubes until we hold this many cubes
   farmUntilT: 230, // ...or until this time
   npcRange: 80, // m: engage NPC drones this close (when healthy)

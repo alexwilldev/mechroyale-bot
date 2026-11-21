@@ -55,8 +55,10 @@ Noise: the same build varies about ±0.3 between runs (2.38 vs 2.71), so single-
 | fa72632 | Batch 18: laserRange 255 | REAL 3.42 (sim 5.10) -> SIM DOES NOT PREDICT RANGE EFFECTS; 59th, leader 5.58 |
 | 630fbd7 | Batch 19: laserRange back to 150 (batch 16 ranges) | REAL 3.60 |
 | 2e74457 | Batch 20: laserRange 110, gunRange 90 | REAL 4.13 BEST (41st; leader 5.58) -> shorter ranges help for real |
-| (pending) | Batch 21: laser 80, gun 70 | ? |
-| (pending) | Batch 22: laser 50, gun 45 | ? |
+| 23098e6 | Batch 21: laser 80, gun 70 | REAL 3.69 |
+| bef1ad0 | Batch 22: laser 50, gun 45 | REAL 4.04 (leader now 5.69) -> range curve flat <=110 |
+| (next) | Batch 23: batch 20 ranges + lightning back on (lightningRange 28, pref laser>lightning>mortar) | ? |
+Qualifying tip: only the best practice score counts and runs vary +-0.3, so resubmitting the best build (2e74457) can draw a higher score.
 
 Baseline to beat: 1.15.
 

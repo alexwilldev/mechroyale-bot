@@ -21,7 +21,7 @@ export const P = {
   laserDetourEarly: 400, // m: in the first minute, go further for a laser
   laserScanSpin: 0.35, // rad per decision to spin the torso while unarmed and idle (0 = off)
   laserScanUntil: 150, // s // m: go fetch a remembered laser this far, even mid-fight
-  silentWalk: true, // batch 28: real test (sim cannot judge: its hunters ignore sound)
+  silentWalk: false, // REAL: batches 28/29 with silent walk scored 3.58/3.54 vs 4.25 without -> keep off
   silentFrac: 0.4, // move magnitude cap for silent walking (0.4 x 11.7 = 4.7 m/s)
   backstab: 600, // target bonus when the enemy faces away from us
   counterBonus: 400, // target bonus for weapon counters (laser vs mortar carrier, lightning vs laser carrier)

@@ -83,7 +83,8 @@ Noise: the same build varies about ±0.3 between runs (2.38 vs 2.71), so single-
 | c6193f0 | Batch 33: 31 + giddy-style wide engage, fight boost >40 (practice only), lethal partial laser, lock 200 | practice 3.79; LIVE FFA 8.75 (b31: 11.75) |
 | 5caece0 | Batch 34: 33 in practice, batch 31 behaviour once FFA detected | practice 3.98; LIVE FFA 10.38 |
 | 61dddbe | main = batch 31 exact params (best on practice 4.52 AND live FFA 11.75) | - |
-| (next) | Batch 35: 31 + fight-odds flee (own logistic model, sim/fights.ts; retreat if P(win)<0.45, practice only) | sim neutral |
+| 7ed1d28 | Batch 35: 31 + fight-odds flee (P(win)<0.45, practice only) | REAL 4.19 (worse) |
+| (HEAD) | main = batch 31 behaviour (odds model present, off) | - |
 Qualifying tip: only the best practice score counts and runs vary +-0.3, so resubmitting the best build (2e74457) can draw a higher score.
 
 Baseline to beat: 1.15.

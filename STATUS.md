@@ -3,6 +3,7 @@
 Full plan: `~/.claude/plans/create-a-plan-to-vast-sifakis.md`. Cutoff **Sun 11:00 AM ET**.
 
 ## Current phase
+PIVOT (user call): sim paused; shipping combat batches straight to the real scorer. No match replays are available, so the scorer is the only feedback.
 Phase 0 + Phase 1 done → next: **Phase 2 (sandbox sim)**, then Phase 3 (combat core).
 
 ## Phase 1 (world model) — done
@@ -26,7 +27,9 @@ Phase 0 + Phase 1 done → next: **Phase 2 (sandbox sim)**, then Phase 3 (combat
 ## Submissions (commit → practice score)
 | commit | what | score |
 | --- | --- | --- |
-| 17115f2 | Phase 0 turtle | ? |
+| 17115f2/4414355 | Phase 0 turtle / Phase 1 map+nav | 2.38, 2.71 (17th; leader 4.77) |
+| a1eebe1 | Combat batch 1: focus fire, loot seeking, roaming, cover on reload/low hp, range keeping | ? |
+| (next) | Combat batch 2: laser + mortar dodge, A* cap 8k (tick max 6 ms in 1-CPU sandbox) | ? |
 
 Baseline to beat: 1.15.
 

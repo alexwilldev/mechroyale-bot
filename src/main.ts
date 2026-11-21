@@ -32,7 +32,7 @@ function ballisticPitch(d: number, h: number, v: number, g: number): number | nu
   return Math.atan2(v2 - Math.sqrt(disc), g * d)
 }
 
-class Turtle {
+export class Turtle {
   name = "mr-turtle"
   cfg: Hello["config"]
   strafeSign = 1
@@ -51,6 +51,8 @@ class Turtle {
   route: { goal: V3; pts: number[][]; t: number } | null = null
   maxMs = 0
   lastTarget = -1
+  dodgeSign = 1
+  dodgeFlipT = 0
   roam: V3 | null = null
   roamUntil = 0
 
@@ -269,6 +271,42 @@ class Turtle {
       }
     }
 
+    // --- dodging: charged lasers aimed at us, mortar shells landing near us ---
+    let dodge = false
+    for (const m of mechs) {
+      if (!m.charging) continue
+      const off = Math.abs(wrap(m.aim[0] - yawTo(m.pos, pos)))
+      if (off < P.laserDodgeYaw) {
+        const py = yawTo(m.pos, pos) + (this.dodgeSign * Math.PI) / 2
+        mv = [Math.cos(py) * 1.5 + mv[0] * 0.3, Math.sin(py) * 1.5 + mv[1] * 0.3]
+        dodge = true
+        state += "+dodgeL"
+        break
+      }
+    }
+    if (!dodge) {
+      const g = this.cfg.weapons.mortar.gravity ?? 22
+      const splash = (this.cfg.weapons.mortar.splash_radius ?? 7) + 4
+      for (const p of obs.projectiles) {
+        if (p.kind !== "mortar") continue
+        // time until the shell falls to our height: z + vz t - g t²/2 = pos.z
+        const a = -g / 2, b = p.vel[2], c = p.pos[2] - (pos[2] + 1)
+        const disc = b * b - 4 * a * c
+        if (disc < 0) continue
+        const tl = (-b - Math.sqrt(disc)) / (2 * a)
+        if (tl <= 0 || tl > 3) continue
+        const land = [p.pos[0] + p.vel[0] * tl, p.pos[1] + p.vel[1] * tl, pos[2]]
+        if (hdist(land, pos) < splash) {
+          const ay = yawTo(land, pos)
+          mv = [Math.cos(ay) * 1.5, Math.sin(ay) * 1.5]
+          dodge = true
+          state += "+dodgeM"
+          break
+        }
+      }
+    }
+    if (t > this.dodgeFlipT) (this.dodgeSign = -this.dodgeSign), (this.dodgeFlipT = t + 1.5 + Math.random())
+
     // --- stuck handling: commanded move but not moving -> jump/jet and sidestep ---
     const speed = Math.hypot(me.vel[0], me.vel[1])
     const wantMove = Math.hypot(mv[0], mv[1]) > 0.3
@@ -279,7 +317,8 @@ class Turtle {
       this.unstickYaw = Math.atan2(mv[1], mv[0]) + (Math.random() < 0.5 ? 1 : -1) * (Math.PI / 2)
       this.stuckT = 0
     }
-    let boost = !me.in_zone || (state === "rotate" && t > z.shrink_start - 10 && dCenter > z.next_radius)
+    let boost =
+      !me.in_zone || (state === "rotate" && t > z.shrink_start - 10 && dCenter > z.next_radius) || (dodge && me.energy > P.dodgeEnergy)
     if (t < this.unstickUntil) {
       act.jump = me.grounded
       if (!me.grounded && me.energy > 15) boost = true
@@ -395,4 +434,4 @@ class Turtle {
   }
 }
 
-run((hello) => new Turtle(hello))
+if (import.meta.main) run((hello) => new Turtle(hello))

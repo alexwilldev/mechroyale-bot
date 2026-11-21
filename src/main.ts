@@ -56,8 +56,8 @@ export class Turtle {
   cover: V3 | null = null
   coverT = -99
   /** Over the soft per-tick budget: skip optional work (replans, cover/hold searches). */
-  late() {
-    return performance.now() - this.t0 > P.softBudgetMs
+  late(ms = P.softBudgetMs) {
+    return performance.now() - this.t0 > ms
   }
   hold: V3 | null = null
   holdUntil = 0
@@ -105,7 +105,7 @@ export class Turtle {
     const stale = !r || hdist(r.goal, goal) > 6 || t - r.t > P.replanEvery || !r.pts.length || hdist(pos, r.pts[0]) > 12
     if (stale && t - this.lastPlanT >= P.minReplan && !this.late()) {
       this.lastPlanT = t
-      const pts = nav.path(pos[0], pos[1], goal[0], goal[1], P.maxExpand, true)
+      const pts = nav.path(pos[0], pos[1], goal[0], goal[1], P.maxExpand, true, this.t0 + P.hardBudgetMs)
       this.route = pts && pts.length ? { goal: [...goal], pts, t } : null
     }
     const rt = this.route
@@ -125,7 +125,7 @@ export class Turtle {
   findHoldSpot(pos: V3, center: V3, safeR: number): V3 | null {
     if (!this.map || !this.nav) return null
     let best: V3 | null = null, bestCost = Infinity
-    for (let k = 0; k < P.holdSamples; k++) {
+    for (let k = 0; k < P.holdSamples && !this.late(P.hardBudgetMs); k++) {
       const a = Math.random() * TAU, r = k === 0 ? 0 : 6 + Math.random() * P.holdSearch
       const x = pos[0] + Math.cos(a) * r, y = pos[1] + Math.sin(a) * r
       if (hdist([x, y], center) > safeR || !this.nav.isFree(x, y)) continue
@@ -163,7 +163,7 @@ export class Turtle {
     const away = yawTo(threat, pos)
     let best: V3 | null = null, bestCost = Infinity
     for (const r of [10, 18, 28])
-      for (let k = 0; k < 12; k++) {
+      for (let k = 0; k < 12 && !this.late(P.hardBudgetMs); k++) {
         const a = (k / 12) * TAU
         const x = pos[0] + Math.cos(a) * r, y = pos[1] + Math.sin(a) * r
         if (!this.nav.isFree(x, y) || !this.nav.lineFree(pos[0], pos[1], x, y)) continue

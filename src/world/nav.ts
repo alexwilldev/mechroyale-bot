@@ -127,7 +127,7 @@ export class Nav {
    * ending at the goal point, or null if unreachable within maxExpand expansions (then the best
    * partial path toward the goal is returned when partial = true).
    */
-  path(sx: number, sy: number, tx: number, ty: number, maxExpand = 30000, partial = true): number[][] | null {
+  path(sx: number, sy: number, tx: number, ty: number, maxExpand = 30000, partial = true, deadline = Infinity): number[][] | null {
     const s = this.nearestFree(sx, sy, 15), t = this.nearestFree(tx, ty, 40)
     if (s < 0 || t < 0) return null
     if (s === t) return [[tx, ty]]
@@ -185,6 +185,7 @@ export class Nav {
       const hk = h(k)
       if (hk < bestH) (bestH = hk), (best = k)
       if (++expanded > maxExpand) break
+      if ((expanded & 255) === 0 && performance.now() > deadline) break // out of time: return the best partial path
       const kx = k % W, ky = Math.floor(k / W)
       for (let d = 0; d < 16; d += 2) {
         const nx = kx + D[d], ny = ky + D[d + 1]

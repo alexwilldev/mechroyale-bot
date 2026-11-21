@@ -230,7 +230,11 @@ export class Turtle {
     let crateTarget: { id: number; pos: V3; hp?: number } | null = null
     if (!target) {
       const npcAttacker = npcs.find((n) => n.id === this.lastDamage.by && t - this.lastDamage.t < 3)
-      const npcNear = npcs.filter((n) => hdist(n.pos, pos) < 80).sort((a, b) => hdist(a.pos, pos) - hdist(b.pos, pos))[0]
+      // only pick fights with drones when healthy; always answer one that is shooting us
+      const healthy = me.hp / me.max_hp >= P.npcHuntHp
+      const npcNear = healthy
+        ? npcs.filter((n) => hdist(n.pos, pos) < 80).sort((a, b) => hdist(a.pos, pos) - hdist(b.pos, pos))[0]
+        : undefined
       target = npcAttacker ?? npcNear ?? null
     }
     if (!target && quiet) {

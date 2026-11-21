@@ -55,6 +55,8 @@ Noise: the same build varies about ±0.3 between runs (2.38 vs 2.71), so single-
 | fa72632 | Batch 18: laserRange 255 | REAL 3.42 (sim 5.10) -> SIM DOES NOT PREDICT RANGE EFFECTS; 59th, leader 5.58 |
 | 630fbd7 | Batch 19: laserRange back to 150 (batch 16 ranges) | REAL 3.60 |
 | 2e74457 | Batch 20: laserRange 110, gunRange 90 | REAL 4.13 BEST (41st; leader 5.58) -> shorter ranges help for real |
+| (pending) | Batch 21: laser 80, gun 70 | ? |
+| (pending) | Batch 22: laser 50, gun 45 | ? |
 
 Baseline to beat: 1.15.
 

@@ -13,11 +13,14 @@ export const P = {
   pickupDetour: 160, // m: walk to wanted weapon pickups this close when no threat
   targetDistW: 4,
   laserMemory: 60, // s to remember a laser pickup we saw
-  laserDetour: 250, // m: go fetch a remembered laser this far, even mid-fight
+  laserDetour: 250,
+  laserDetourEarly: 400, // m: in the first minute, go further for a laser
+  laserScanSpin: 0.35, // rad per decision to spin the torso while unarmed and idle (0 = off)
+  laserScanUntil: 150, // s // m: go fetch a remembered laser this far, even mid-fight
   lockBonus: 150, // target score bonus for staying on the current target (finish kills before they regen) // target score: hp + dist * this (lower = preferred)
   retreatHp: 0.35, // break line of sight below this hp fraction when the enemy has more hp
   gunRange: 130, // sim: 130 m beats 90 m by ~+0.5
-  laserRange: 150, // m: preferred distance when holding a laser // m: preferred fighting distance with gun/laser
+  laserRange: 230, // sim sweep: 200-230 best (+0.3-0.5 over 150) // m: preferred distance when holding a laser // m: preferred fighting distance with gun/laser
   lightningRange: 130, // sim: closing in for lightning loses points; effectively disabled // m: preferred distance when lightning is charged up
   farmCubes: 0, // keep roaming for crates/drones/cubes until we hold this many cubes
   farmUntilT: 230, // ...or until this time
@@ -25,7 +28,7 @@ export const P = {
   roamUntilT: 100, // s: roam for loot until then (or while slot 1 is empty)
   crateShootRange: 70, // m: shoot crates when no threat
   zoneSafety: 0.75, // stay within this fraction of the next radius from next_center
-  strafeFlip: 0.9, // s between strafe direction changes
+  strafeFlip: 0.6, // s between strafe direction changes
   threatMemory: 4, // s to keep facing the last damage bearing
   mortarMinRange: 18, // m: no mortar closer than this (self splash)
   lightningEnergyFloor: 12,

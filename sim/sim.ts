@@ -75,7 +75,7 @@ export class Mech {
   route: { pts: number[][]; t: number; goal: V3 } | null = null
   strafeSign = 1
   strafeT = 0
-  log = { shots: {} as any, hits: {} as any, dmgIn: {} as any, dmgOut: 0, states: {} as any, stuck: 0, deathBy: "", deathT: 0, maxMs: 0, ms: [] as number[] }
+  log = { shots: {} as any, hits: {} as any, dmgIn: {} as any, dmgOut: 0, states: {} as any, stuck: 0, deathBy: "", deathT: 0, maxMs: 0, ms: [] as number[], laserT: 0 }
   constructor(public id: number, public team: number, pos: V3, public bot: any) {
     this.pos = pos
     this.stats = { ...C.mech }
@@ -367,6 +367,7 @@ export class Match {
           m.weapons[slot] = { kind: p.kind, cooldown: 0, ammo: m.wst.gun.mag, reload: 0, charge: 0, equip: Math.max(C.loot.equip_s, m.wst[p.kind].cooldown) }
           this.pickups = this.pickups.filter((x) => x !== p)
           m.events.push({ type: "took", id: p.id, kind: p.kind, slot })
+          if (p.kind === "laser" && !m.log.laserT) m.log.laserT = this.t
         }
       }
       a.take = undefined

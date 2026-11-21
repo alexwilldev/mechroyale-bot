@@ -261,7 +261,7 @@ export class Turtle {
       if (t - l.t > P.laserMemory || (hdist(pos, l.pos) < 6 && !obs.pickups.some((p) => p.id === id))) this.lasers.delete(id)
     let laserGoal: V3 | null = null
     if (!hasLaser && me.hp / me.max_hp > P.retreatHp) {
-      let bd = P.laserDetour
+      let bd = t < 60 ? P.laserDetourEarly : P.laserDetour
       for (const l of this.lasers.values()) {
         const d = hdist(pos, l.pos)
         const zc = obs.zone.center, safe = hdist(l.pos, [zc[0], zc[1]]) < obs.zone.radius - 25 && hdist(l.pos, obs.zone.next_center) < obs.zone.next_radius + 40
@@ -583,6 +583,7 @@ export class Turtle {
       let yaw: number
       if (t - this.lastDamage.t < P.threatMemory) yaw = this.lastDamage.bearing
       else if (t - this.lastSound.t < 2) yaw = this.lastSound.bearing
+      else if (!hasLaser && P.laserScanSpin > 0 && t < P.laserScanUntil) yaw = this.scanYaw += P.laserScanSpin // spin to spot lasers
       else if (n > 0.3) yaw = Math.atan2(mv[1], mv[0]) + Math.sin(t * 1.7) * 0.9 // sweep while walking
       else yaw = this.scanYaw += 0.12
       act.aim = [yaw, 0]

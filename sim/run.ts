@@ -40,6 +40,8 @@ for (let k = 0; k < N; k++) {
     agg.ms.push(...me.log.ms)
     agg.maxMs = Math.max(agg.maxMs, me.log.maxMs)
     agg.cubes.push(me.cubes)
+    agg.laserT = agg.laserT ?? []
+    agg.laserT.push(me.log.laserT || 999)
     const ws = me.weapons.filter((w) => w).map((w) => w!.kind).join("+")
     agg.weapons[ws] = (agg.weapons[ws] ?? 0) + 1
   }
@@ -51,6 +53,8 @@ const totalT = Object.values(agg.states).reduce((s: number, x: any) => s + x, 0)
 const fmt = (o: any, f = (v: number) => v.toFixed(0)) => Object.entries(o).sort((a: any, b: any) => b[1] - a[1]).map(([k, v]) => `${k}=${f(v as number)}`).join("  ")
 console.log(`mode=${MODE} matches=${N} seed=${SEED} wall=${((performance.now() - t0) / 1000).toFixed(1)}s`)
 console.log(`POINTS mean ${mean(agg.pts).toFixed(2)} (sd ${sd(agg.pts).toFixed(2)}, se ${(sd(agg.pts) / Math.sqrt(agg.pts.length)).toFixed(2)})  kills ${mean(agg.kills).toFixed(2)}  death t ${mean(agg.deathT).toFixed(0)}s  cubes ${mean(agg.cubes).toFixed(1)}`)
+const lt = (agg.laserT ?? []).slice().sort((a: number, b: number) => a - b)
+console.log(`laser acquired: by 15s ${lt.filter((x: number) => x <= 15).length}%  by 30s ${lt.filter((x: number) => x <= 30).length}%  by 60s ${lt.filter((x: number) => x <= 60).length}%  ever ${lt.filter((x: number) => x < 999).length}%  (n=${lt.length})`)
 console.log(`death by: ${fmt(agg.deathBy)}`)
 console.log(`dmg taken (total): ${fmt(agg.dmgIn)}`)
 console.log(`shots: ${fmt(agg.shots)}   hits: ${fmt(agg.hits)}   hit%: ${Object.keys(agg.shots).map((k) => `${k}=${((100 * (agg.hits[k] ?? 0)) / agg.shots[k]).toFixed(0)}%`).join(" ")}`)

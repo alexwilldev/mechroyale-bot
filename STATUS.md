@@ -48,7 +48,8 @@ Noise: the same build varies about ±0.3 between runs (2.38 vs 2.71), so single-
 | 3d8e3e2 | Batch 13: range play (laser 150 m, gun 90 m) + faster strafe flips (0.5-1.3 s) | 3.46, wait 25 ms |
 | bab1cad | Batch 14: batch 13 + boost-strafing in fights (on >80 energy, off <45) | ? (x2) |
 | 6c937e2 | Batch 15: batch 14 + rooftop camping when idle | 3.52 (one of 14/15; user: 'def not the move') |
-| (next) | Batch 16 (SIM-DRIVEN): laser seeking even mid-fight (memory 60 s, 250 m, inside zone), weapon pref laser>mortar>lightning, no closing for lightning, gun range 130 m | sim 4.3 vs 3.1-3.6 old |
+| e283e74 | Batch 16 (SIM-DRIVEN): laser seeking mid-fight, weapon pref laser>mortar>lightning, gun range 130 m | 3.85 real (best; 51st, leader 5.48); sim 4.3 |
+| (next) | Batch 17: + scan spin, early 400 m laser detour, laserRange 230, strafeFlip 0.6 | sim 4.94 (2 seeds) |
 
 Baseline to beat: 1.15.
 

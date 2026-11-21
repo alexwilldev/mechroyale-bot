@@ -3,6 +3,7 @@
 Full plan: `~/.claude/plans/create-a-plan-to-vast-sifakis.md`. Cutoff **Sun 11:00 AM ET**.
 
 ## Current phase
+COMPETITOR STUDY (Sat ~13:00): 238 public Mech Royale repos; teams stating 5.1-5.8 converge on: selective fights (~60 m engage, don't wake idle house bots), heal to ~95% before re-engaging, escape when 2 enemies hit us, laser timing/partial lethal shots, uncontested drops. Ideas only, no code copied.
 RE-FROZEN (Sat ~12:30): structural batches 24-26 gave no real gain (3.71). Best board 4.17; 32nd place 5.33 -> cannot qualify. Main = batch 20 behaviour.
 PREVIOUSLY UNFROZEN (Sat 11:00, user: continue iterating): structural ideas, one per batch: 24 isolate, 25 laser peek, 26 first strike from footsteps, 27 early drop grab.
 WAS FROZEN (Sat ~02:00, user's resources moved to other tracks). Real level ~3.9-4.0 vs leader 5.69. Main = batch 20 behaviour. Only action left: resubmit main for lucky practice draws (top-32 qualifying).
@@ -72,7 +73,9 @@ Noise: the same build varies about ±0.3 between runs (2.38 vs 2.71), so single-
 | 89439ec | Batch 27 'predator': backstab/counter/zone-victim targeting, zone hold, drone lure; silent walk OFF | REAL 4.25 (new best; 114th) |
 | 8e76d0e | Batch 28: 27 + silent walk ON | REAL 3.58 (silence hurts) |
 | 94063ac | Batch 29: 28 + doubled predator bonuses | REAL 3.54 (confounded by silence) |
-| (next) | Batch 30: 27 + doubled predator bonuses, silent OFF | ? |
+| 90dfa02 | Batch 30: 27 + doubled predator bonuses, silent OFF | REAL 3.83 |
+| (next) | Batch 31: 27 + selective fights (60 m / attackers / <30% hp) - from top public repos | ? |
+| (next) | Batch 32: 31 + heal-to-full (stop fights <55%, resume at 95%; retreat 55%) | ? |
 Qualifying tip: only the best practice score counts and runs vary +-0.3, so resubmitting the best build (2e74457) can draw a higher score.
 
 Baseline to beat: 1.15.

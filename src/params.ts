@@ -2,10 +2,10 @@
 export const P = {
   // Upgrade priority, first available wins. Ids from hello.config.upgrades.
   upgradeOrder: [
-    "plating", "armor", "nanites", "gun_damage", "laser_damage", "gun_rate", "laser_charge",
-    "lightning_efficiency", "mortar_reload", "gyros", "gun_mag", "gun_velocity", "lightning_range",
-    "lightning_chain", "mortar_velocity", "mortar_splash", "laser_pierce", "sensors", "reactor",
-    "capacitor", "jets", "servos",
+    // practice placement = hunters killed before we die, so offense ranks high; plating stays first (also wins the final-zone HP race)
+    "plating", "laser_damage", "gun_damage", "laser_charge", "armor", "gun_rate", "lightning_efficiency",
+    "mortar_reload", "nanites", "gun_mag", "gyros", "lightning_range", "gun_velocity", "lightning_chain",
+    "mortar_velocity", "mortar_splash", "sensors", "laser_pierce", "reactor", "capacitor", "jets", "servos",
   ],
   // Weapon preference for the second slot (higher = better).
   weaponScore: { laser: 3, lightning: 2, mortar: 1, gun: 0 } as Record<string, number>,

@@ -3,7 +3,8 @@
 Full plan: `~/.claude/plans/create-a-plan-to-vast-sifakis.md`. Cutoff **Sun 11:00 AM ET**.
 
 ## Current phase
-UNFROZEN (Sat 11:00, user: continue iterating): structural ideas, one per batch: 24 isolate, 25 laser peek, 26 first strike from footsteps, 27 early drop grab.
+RE-FROZEN (Sat ~12:30): structural batches 24-26 gave no real gain (3.71). Best board 4.17; 32nd place 5.33 -> cannot qualify. Main = batch 20 behaviour.
+PREVIOUSLY UNFROZEN (Sat 11:00, user: continue iterating): structural ideas, one per batch: 24 isolate, 25 laser peek, 26 first strike from footsteps, 27 early drop grab.
 WAS FROZEN (Sat ~02:00, user's resources moved to other tracks). Real level ~3.9-4.0 vs leader 5.69. Main = batch 20 behaviour. Only action left: resubmit main for lucky practice draws (top-32 qualifying).
 SIMULATOR BUILT (sim/sim.ts + sim/run.ts). Calibrated: old build scores ~3.4 in sim vs ~3.5 real. Usage:
 `bun sim/run.ts --n 100 --seed 5 [--set key=val,...] [--start laser] [--svg /tmp/x.svg]` (100 matches ~25 s).
@@ -66,7 +67,8 @@ Noise: the same build varies about ±0.3 between runs (2.38 vs 2.71), so single-
 | 13656bc (resubmit) | Batch 20 resubmit | REAL 4.17 (new best). 32nd place = 5.33 -> need +1.2 to qualify |
 | 998a1d0 | Batch 24: isolate - when 2+ enemies have LOS, cover from all but target (sim neutral) | ? |
 | 9ecf260 | Batch 25: 24 + laser peek (hide while charging/cooling, peek out to fire) (sim neutral) | ? |
-| (next) | Batch 26: 25 + laser pre-charge toward unseen footsteps (sim neutral) | ? |
+| 3da640b | Batch 26: 24+25 + laser pre-charge toward unseen footsteps (sim neutral) | REAL 3.71 (no gain; 24/25 never scored alone) |
+| (HEAD) | RE-FROZEN: batch 20 behaviour (isolate/peek/precharge code present but OFF via params) | - |
 Qualifying tip: only the best practice score counts and runs vary +-0.3, so resubmitting the best build (2e74457) can draw a higher score.
 
 Baseline to beat: 1.15.

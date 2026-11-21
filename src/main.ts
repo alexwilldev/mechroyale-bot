@@ -53,6 +53,7 @@ export class Turtle {
   maxMs = 0
   lastTarget = -1
   lastPlanT = -99
+  drones = new Map<number, { pos: V3; t: number }>()
   lastStep = { t: -99, bearing: 0 }
   peekPos: V3 | null = null
   peekCover: V3 | null = null
@@ -175,6 +176,42 @@ export class Turtle {
     }
     this.explore = best
     this.exploreT = t + 12
+    return best
+  }
+
+  /** Target-score bonus for 'easy kills': backs turned, weapon counters, already bleeding in the zone. */
+  predatorBonus(m: ActorObs, me: Observation["self"], pos: V3, obs: Observation): number {
+    let b = 0
+    // backstab: they are facing away from us (not shooting back, rear hits x1.5)
+    if (this.p.backstab && Math.abs(wrap(m.aim[0] - yawTo(m.pos, pos))) > Math.PI / 2) b += this.p.backstab
+    const ws = m.weapons ?? []
+    const mine = me.weapons.map((w) => w?.kind)
+    if (this.p.counterBonus) {
+      if (mine.includes("laser") && ws.includes("mortar")) b += this.p.counterBonus // cook-off +60%
+      if (mine.includes("lightning") && ws.includes("laser") && hdist(m.pos, pos) < 45) b += this.p.counterBonus // short
+    }
+    // zone victims: already losing hp every second
+    const zc = obs.zone.center
+    if (this.p.zoneVictim && hdist(m.pos, [zc[0], zc[1]]) > obs.zone.radius) b += this.p.zoneVictim
+    return b
+  }
+
+  /** Point beyond a nearby drone (drone between us and the threat), so a pursuer crosses its 45 m zone. */
+  droneLure(pos: V3, threat: V3, t: number): V3 | null {
+    let best: V3 | null = null, bd = Infinity
+    for (const [id, d] of this.drones) {
+      if (t - d.t > 90) {
+        this.drones.delete(id)
+        continue
+      }
+      const dist = hdist(pos, d.pos)
+      if (dist > 140 || dist < 20) continue
+      const ay = yawTo(threat, d.pos)
+      const p = [d.pos[0] + Math.cos(ay) * 40, d.pos[1] + Math.sin(ay) * 40, d.pos[2]]
+      if (this.nav && !this.nav.isFree(p[0], p[1])) continue
+      if (hdist(threat, d.pos) < dist) continue // drone must be on our side, not theirs
+      if (dist < bd) (bd = dist), (best = p)
+    }
     return best
   }
 
@@ -345,7 +382,8 @@ export class Turtle {
         hdist(m.pos, pos) * this.p.targetDistW -
         (m.id === this.lastDamage.by && t - this.lastDamage.t < 3 ? this.p.attackerBonus : 0) -
         (m.id === this.rearBy.id && t - this.rearBy.t < 2 ? this.p.rearBonus : 0) -
-        (m.id === this.lastTarget ? this.p.lockBonus : 0) +
+        (m.id === this.lastTarget ? this.p.lockBonus : 0) -
+        this.predatorBonus(m, me, pos, obs) +
         (this.clear(eyeP, [m.pos[0], m.pos[1], m.pos[2] + 4.5]) ? 0 : 900)
       target = mechs.reduce((a, b) => (score(a) <= score(b) ? a : b))
       this.lastTarget = target.id
@@ -377,6 +415,8 @@ export class Turtle {
     let goal: V3 | null = null
     let state = "hold"
     let dropGoal: { pos: V3; radius: number } | null = null
+    let lure: V3 | null = null
+    for (const o of obs.mechs) if (o.kind === "npc") this.drones.set(o.id, { pos: o.pos, t })
     if (z.next_radius <= this.p.endgameRadius) {
       if (dCenter > 1.5) goal = nc
       state = "endgame"
@@ -496,6 +536,10 @@ export class Turtle {
         const py = ty0 + (this.strafeSign * Math.PI) / 2
         mv = [g[0] + Math.cos(py) * 0.3, g[1] + Math.sin(py) * 0.3]
         state = "fight-laser"
+      } else if (losing && this.p.droneLure && (lure = this.droneLure(pos, target.pos, t))) {
+        // losing: run past a drone so it engages whoever chases us
+        mv = this.steer(pos, lure, t)
+        state = "lure"
       } else if (cover && state !== "endgame") {
         mv = this.steer(pos, cover, t)
         state = losing ? "retreat" : "reload-cover"
@@ -619,6 +663,22 @@ export class Turtle {
         const ax = pos[0] + (mv[0] / mn) * 4, ay = pos[1] + (mv[1] / mn) * 4
         if (this.map.surfaceAt(ax, ay, pos[2] + 1.2) < pos[2] - 1.5) mv = [0, 0]
       }
+    }
+    // zone discipline: don't follow anyone out of the circle (let the zone hurt them, not us)
+    if (this.p.zoneHold && target && target.kind === "mech" && me.in_zone && !state.startsWith("rotate")) {
+      const zc = obs.zone.center, zr = obs.zone.radius
+      const ahead = [pos[0] + mv[0] * 6, pos[1] + mv[1] * 6]
+      if (hdist(ahead, [zc[0], zc[1]]) > zr - 4) {
+        const iy = Math.atan2(zc[1] - pos[1], zc[0] - pos[0])
+        const out = -(mv[0] * Math.cos(iy) + mv[1] * Math.sin(iy)) // outward component
+        if (out > 0) mv = [mv[0] + out * Math.cos(iy), mv[1] + out * Math.sin(iy)]
+      }
+    }
+    // silence: no enemy in sight and no hurry -> walk under the footstep threshold (5 m/s)
+    if (this.p.silentWalk && !target && me.in_zone && !boost && !dodge && !state.startsWith("rotate") && !state.startsWith("climb")) {
+      const cap = this.p.silentFrac
+      const mm = Math.hypot(mv[0], mv[1])
+      if (mm > cap) (mv = [(mv[0] / mm) * cap, (mv[1] / mm) * cap]), (state += "+quiet")
     }
     const n = Math.hypot(mv[0], mv[1])
     act.move = n > 1 ? [mv[0] / n, mv[1] / n] : mv

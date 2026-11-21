@@ -68,7 +68,8 @@ Noise: the same build varies about ±0.3 between runs (2.38 vs 2.71), so single-
 | 998a1d0 | Batch 24: isolate - when 2+ enemies have LOS, cover from all but target (sim neutral) | ? |
 | 9ecf260 | Batch 25: 24 + laser peek (hide while charging/cooling, peek out to fire) (sim neutral) | ? |
 | 3da640b | Batch 26: 24+25 + laser pre-charge toward unseen footsteps (sim neutral) | REAL 3.71 (no gain; 24/25 never scored alone) |
-| (HEAD) | RE-FROZEN: batch 20 behaviour (isolate/peek/precharge code present but OFF via params) | - |
+| af9372f | RE-FROZEN: batch 20 behaviour | - |
+| (next) | Batch 27 'predator': target backstabs (enemy facing away), weapon counters (laser->mortar carrier, lightning->laser carrier), zone victims, never chase out of zone, drone lure on retreat; silent walk OFF (sim -0.13) | sim ~neutral each |
 Qualifying tip: only the best practice score counts and runs vary +-0.3, so resubmitting the best build (2e74457) can draw a higher score.
 
 Baseline to beat: 1.15.

@@ -53,6 +53,9 @@ export class Turtle {
   maxMs = 0
   lastTarget = -1
   lastPlanT = -99
+  peekPos: V3 | null = null
+  peekCover: V3 | null = null
+  peekCoverT = -99
   iso: V3 | null = null
   isoT = -99
   rearBy = { id: -1, t: -99 }
@@ -468,9 +471,24 @@ export class Turtle {
           iso = this.iso
         } else this.iso = null
       }
+      // laser peek: hide while the laser cools/charges, step back out to the last firing spot when nearly charged
+      let peek: V3 | null = null, peekState = ""
+      if (this.p.laserPeek && laser && this.map && state !== "endgame") {
+        const tgtC = [target.pos[0], target.pos[1], target.pos[2] + 4.5]
+        const losNow = this.map.los([pos[0], pos[1], pos[2] + 7], tgtC)
+        if (losNow) this.peekPos = [...pos]
+        const ready = laser.cooldown <= 0 && (laser.charge ?? 0) >= (laser.stats.charge ?? 0.75) * 0.8
+        if (!ready) {
+          if (t - this.peekCoverT > 0.5 && !this.late()) (this.peekCover = this.findCover(pos, target.pos)), (this.peekCoverT = t)
+          if (this.peekCover) (peek = this.peekCover), (peekState = "peek-hide")
+        } else if (!losNow && this.peekPos) (peek = this.peekPos), (peekState = "peek-out")
+      }
       if (iso) {
         mv = this.steer(pos, iso, t)
         state = "isolate"
+      } else if (peek) {
+        mv = this.steer(pos, peek, t)
+        state = peekState
       } else if (laserGoal && !losing && state !== "endgame") {
         const g = this.steer(pos, laserGoal, t)
         const py = ty0 + (this.strafeSign * Math.PI) / 2

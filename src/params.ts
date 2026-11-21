@@ -21,6 +21,7 @@ export const P = {
   laserDetourEarly: 400, // m: in the first minute, go further for a laser
   laserScanSpin: 0.35, // rad per decision to spin the torso while unarmed and idle (0 = off)
   laserScanUntil: 150, // s // m: go fetch a remembered laser this far, even mid-fight
+  laserPeek: true, // with a laser: hide while it charges/cools, peek out to fire
   isolate: true, // when 2+ enemies have LOS on us, move to cover from all but the target
   lockBonus: 150,
   attackerBonus: 250, // target bonus for whoever damaged us in the last 3 s

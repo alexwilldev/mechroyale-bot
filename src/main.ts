@@ -52,6 +52,10 @@ export class Turtle {
   maxMs = 0
   lastTarget = -1
   lastPlanT = -99
+  roofs: { id: number; cx: number; cy: number; top: number; launch: number[] }[] = []
+  roofNow: { id: number; cx: number; cy: number; top: number; launch: number[] } | null = null
+  badRoofs = new Set<number>()
+  climbT = 0
   fightBoost = false
   t0 = 0
   cover: V3 | null = null
@@ -73,6 +77,25 @@ export class Turtle {
       this.map = GameMap.load(h.map.dir)
       const m = h.config.mech
       this.nav = new Nav(this.map, { ...defaultNavOpts, stepUp: m.step_up ?? 1.2, maxSlopeDeg: m.max_slope_deg ?? 50 })
+      // candidate roofs to camp on: big enough, climbable, with a walkable launch point next to the wall
+      this.map.prisms.forEach((p, id) => {
+        if (p.kind !== "building") return
+        const m = p.ring.length / 2
+        let cx = 0, cy = 0, area = 0
+        for (let a = 0, b = m - 1; a < m; b = a++) {
+          cx += p.ring[2 * a]
+          cy += p.ring[2 * a + 1]
+          area += p.ring[2 * b] * p.ring[2 * a + 1] - p.ring[2 * a] * p.ring[2 * b + 1]
+        }
+        cx /= m
+        cy /= m
+        area = Math.abs(area) / 2
+        const top = this.map!.surfaceAt(cx, cy), g = this.map!.groundAt(cx, cy)
+        if (area < P.roofArea || top - g < P.roofMin || top - g > P.roofMax) return
+        const k = this.nav!.nearestFree(cx, cy, 80)
+        if (k < 0) return
+        this.roofs.push({ id, cx, cy, top, launch: this.nav!.center(k) })
+      })
       // warm up the JIT on the hot paths while we still have the hello budget
       const b = this.map.bounds
       for (let k = 0; k < 60; k++) {
@@ -120,6 +143,17 @@ export class Turtle {
       }
     const y = yawTo(pos, aimPt)
     return [Math.cos(y), Math.sin(y)]
+  }
+
+  /** Nearest usable roof whose centre is inside the safe circle. */
+  pickRoof(pos: V3, center: V3, safeR: number) {
+    let best = null, bd = Infinity
+    for (const r of this.roofs) {
+      if (this.badRoofs.has(r.id) || hdist([r.cx, r.cy], center) > safeR) continue
+      const d = hdist(pos, [r.cx, r.cy])
+      if (d < bd && d < P.roofSearch) (bd = d), (best = r)
+    }
+    return best
   }
 
   /** Walkable point near pos (inside the safe circle) with the fewest open sight lines around it. */
@@ -302,7 +336,19 @@ export class Turtle {
         goal = this.roam
         state = "roam"
       } else {
-        // nothing to do: wait at a nearby spot that few directions can see (next to buildings)
+        // nothing to do: camp on a roof near the circle centre if we can, else wait at a covered spot
+        const ground = this.map ? this.map.groundAt(pos[0], pos[1]) : pos[2]
+        const onRoof = me.grounded && pos[2] > ground + P.roofMin - 1
+        const r = P.useRoofs ? (this.roofNow && onRoof ? this.roofNow : this.pickRoof(pos, nc, z.next_radius * P.zoneSafety)) : null
+        if (r && onRoof) {
+          this.roofNow = r
+          state = "roof"
+          if (hdist(pos, [r.cx, r.cy]) > 5) goal = [r.cx, r.cy, r.top]
+        } else if (r) {
+          this.roofNow = r
+          state = "to-roof"
+          goal = r.launch
+        } else {
         // re-search at most every 10 s (a failed search must not retry every tick)
         if (t > this.holdUntil || (this.hold && hdist(this.hold, nc) > z.next_radius * P.zoneSafety)) {
           if (this.late()) this.holdUntil = t + 0.5 // out of time this tick: try again shortly
@@ -310,6 +356,7 @@ export class Turtle {
         }
         if (this.hold && hdist(pos, this.hold) > 3) goal = this.hold
         state = "hold"
+        }
       }
     }
 
@@ -407,6 +454,37 @@ export class Turtle {
       if (!me.grounded && me.energy > 15) boost = true
       if (t < this.unstickUntil - 0.6) mv = [Math.cos(this.unstickYaw), Math.sin(this.unstickYaw)]
       state += "+unstick"
+    }
+    // --- roof climb: at the launch point, jump and jet toward the roof centre ---
+    const rr = this.roofNow
+    if (rr && state === "to-roof" && (hdist(pos, rr.launch) < 4 || this.climbT > 0)) {
+      const need = (rr.top - pos[2]) * 1.6 + 15
+      if (this.climbT === 0 && me.energy < need) {
+        mv = [0, 0] // wait at the wall for energy
+        state = "to-roof(energy)"
+      } else {
+        if (this.climbT === 0) this.climbT = t
+        const y = yawTo(pos, [rr.cx, rr.cy])
+        mv = [Math.cos(y), Math.sin(y)]
+        act.jump = me.grounded && pos[2] < rr.top - 1
+        boost = !me.grounded && pos[2] < rr.top + 2 && me.energy > 2
+        this.unstickUntil = 0
+        state = "climb"
+        if (t - this.climbT > P.climbTimeout) {
+          this.badRoofs.add(rr.id)
+          this.roofNow = null
+          this.climbT = 0
+        }
+      }
+    } else this.climbT = 0
+    // --- edge guard: don't strafe off a roof unless we mean to leave ---
+    if (this.map && me.grounded && !state.startsWith("rotate") && me.in_zone) {
+      const gnd = this.map.groundAt(pos[0], pos[1])
+      const mn = Math.hypot(mv[0], mv[1])
+      if (pos[2] > gnd + P.roofMin - 1 && mn > 0.1) {
+        const ax = pos[0] + (mv[0] / mn) * 4, ay = pos[1] + (mv[1] / mn) * 4
+        if (this.map.surfaceAt(ax, ay, pos[2] + 1.2) < pos[2] - 1.5) mv = [0, 0]
+      }
     }
     const n = Math.hypot(mv[0], mv[1])
     act.move = n > 1 ? [mv[0] / n, mv[1] / n] : mv

@@ -25,6 +25,7 @@ Phase 0 + Phase 1 done → next: **Phase 2 (sandbox sim)**, then Phase 3 (combat
 3. Phase 3 combat: tracker, cover use (peek/shoot), facing the threat for rear armor, laser dodge.
 
 ## Submissions (commit → practice score)
+The scorer's 'wait' ms is NOT our compute (same behaviour gave 0 and 143 ms) - ignore it.
 Noise: the same build varies about ±0.3 between runs (2.38 vs 2.71), so single-run differences under ~0.3 are not meaningful.
 | commit | what | score |
 | --- | --- | --- |
@@ -40,9 +41,10 @@ Noise: the same build varies about ±0.3 between runs (2.38 vs 2.71), so single-
 | c2eac49 | Batch 9: 12 ms soft per-tick budget, cover cached 0.5 s, A* cap 5k | 3.73 (21st; leader 5.19), wait 0 ms |
 | 5c0d497 | Batch 10: cube farming until 8 cubes or 230 s (roam, crates 110 m, drones 120 m, cubes 120 m) | 3.56 (23rd), wait 83 ms |
 | a0313b7 | Batch 11: batch 10 + hard 20 ms deadline inside searches, soft budget 8 ms | 3.17, wait 73 ms |
-| 6ce1d2a | Batch 12: farming OFF (batch 9 ranges) + batch 11 deadlines | ? |
-| 3d8e3e2 | Batch 13: range play (laser 150 m, gun 90 m) + faster strafe flips (0.5-1.3 s) | ? |
-| (next) | Batch 14: batch 13 + boost-strafing in fights (on >80 energy, off <45) | ? |
+| 6ce1d2a | Batch 12: farming OFF (batch 9 ranges) + batch 11 deadlines | 3.46, wait 143 ms |
+| 3d8e3e2 | Batch 13: range play (laser 150 m, gun 90 m) + faster strafe flips (0.5-1.3 s) | 3.46, wait 25 ms |
+| bab1cad | Batch 14: batch 13 + boost-strafing in fights (on >80 energy, off <45) | ? (x2) |
+| (next) | Batch 15: batch 14 + rooftop camping when idle (75 candidate roofs 6-40 m, jump+jet climb, 5 s timeout, edge guard) | ? |
 
 Baseline to beat: 1.15.
 

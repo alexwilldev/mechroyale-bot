@@ -42,6 +42,12 @@ export const P = {
   recoverHp: 0.6, // below this hp fraction with no enemy in sight: hold still and regenerate
   laserDodgeYaw: 0.15, // rad: an enemy charging a laser aimed this close to us -> dodge sideways
   dodgeEnergy: 20,
+  useRoofs: true, // camp on rooftops when idle
+  roofMin: 6, // m: roof height above ground range considered
+  roofMax: 40,
+  roofArea: 400, // m²: minimum footprint
+  roofSearch: 250, // m: only roofs this close
+  climbTimeout: 5, // s: give up a climb (and blacklist that roof) after this
   fightBoostOn: 80, // start boost-strafing in fights above this energy
   fightBoostOff: 45, // stop below this (keeps a reserve for dodges) // keep this much energy before boosting to dodge
   endgameRadius: 70, // once the next circle is this small, stand on next_center exactly

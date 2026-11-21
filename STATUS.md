@@ -79,8 +79,9 @@ Noise: the same build varies about ±0.3 between runs (2.38 vs 2.71), so single-
 | 4e2a7d3 | Batch 31: 27 + selective fights (60 m / attackers / <30% hp) - from top public repos | REAL 4.52 BEST (98th) |
 | 5b01421 | Batch 32: 31 + heal-to-full | REAL 4.40 |
 | 85b7a04 | main = batch 31 behaviour | - |
-| c6193f0 | Batch 33: 31 + giddy-style wide engage, fight boost >40 (practice only), lethal partial laser, lock 200 | practice ? ; LIVE FFA 8.75 pts/match (b31: 11.75) |
-| (next) | Batch 34: 33 in practice, batch 31 behaviour once FFA detected (ffaOverrides) | ? |
+| c6193f0 | Batch 33: 31 + giddy-style wide engage, fight boost >40 (practice only), lethal partial laser, lock 200 | practice 3.79; LIVE FFA 8.75 (b31: 11.75) |
+| 5caece0 | Batch 34: 33 in practice, batch 31 behaviour once FFA detected | practice 3.98; LIVE FFA 10.38 |
+| (HEAD) | main = batch 31 exact params (best on practice 4.52 AND live FFA 11.75) | - |
 Qualifying tip: only the best practice score counts and runs vary +-0.3, so resubmitting the best build (2e74457) can draw a higher score.
 
 Baseline to beat: 1.15.

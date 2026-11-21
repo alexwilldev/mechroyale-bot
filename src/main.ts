@@ -53,6 +53,7 @@ export class Turtle {
   maxMs = 0
   lastTarget = -1
   lastPlanT = -99
+  healing = false
   drones = new Map<number, { pos: V3; t: number }>()
   lastStep = { t: -99, bearing: 0 }
   peekPos: V3 | null = null
@@ -315,6 +316,12 @@ export class Turtle {
 
     // --- bookkeeping: events, sounds, mode detection ---
     let killsNow = 0
+    // heal-to-full hysteresis: below healStart we stop picking fights until back above healUntil
+    if (this.p.healStart > 0) {
+      const f = me.hp / me.max_hp
+      if (f < this.p.healStart) this.healing = true
+      else if (f >= this.p.healUntil) this.healing = false
+    }
     for (const e of obs.events) {
       if (e.type === "damaged" && e.bearing != null) {
         this.lastDamage = { t, bearing: e.bearing, by: e.by }
@@ -370,7 +377,11 @@ export class Turtle {
     // --- target selection ---
     // engage only mechs within engageRange, plus anyone who shot us recently (FFA survival lever)
     const mechs = obs.mechs.filter(
-      (m) => m.kind === "mech" && (hdist(m.pos, pos) <= this.p.engageRange || (m.id === this.lastDamage.by && t - this.lastDamage.t < 6)),
+      (m) =>
+        m.kind === "mech" &&
+        ((m.id === this.lastDamage.by && t - this.lastDamage.t < 6) || // anyone shooting us
+          (!this.healing &&
+            (hdist(m.pos, pos) <= this.p.engageRange || (m.hp ?? 1e9) < this.p.finishHp * (m.max_hp ?? 1400)))), // close, or nearly dead
     )
     const npcs = obs.mechs.filter((m) => m.kind === "npc")
     let target: ActorObs | null = null
@@ -431,7 +442,7 @@ export class Turtle {
       // supply drop in reach with nobody around: stand in its ring until captured (3 cubes, full hp/energy)
       goal = hdist(pos, dropGoal.pos) > dropGoal.radius - 2.5 ? dropGoal.pos : null
       state = "drop"
-    } else if (quiet && me.hp / me.max_hp < this.p.recoverHp) {
+    } else if (quiet && (me.hp / me.max_hp < this.p.recoverHp || this.healing)) {
       // hurt and nobody in sight: stand still (silent) and regenerate, facing where the damage came from
       state = "recover"
     } else if (quiet) {

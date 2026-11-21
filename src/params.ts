@@ -14,7 +14,10 @@ export const P = {
   targetDistW: 4,
   ffaDeaths: 2, // unexplained deaths before we decide it's a free-for-all
   ffaOverrides: {} as Record<string, number>, // sim FFA h2h of engageRange=60 was +0.7, -0.84, 0.0 on 3 seed sets: no reliable edge, so no switch
-  engageRange: 9999, // m: only pick fights with mechs this close (or that shot us)
+  engageRange: 60, // top teams (5.1+): only fight mechs within ~60 m, attackers, or nearly dead ones (don't wake idle house bots)
+  finishHp: 0.3, // also engage any visible mech below this hp fraction
+  healStart: 0, // heal-to-full: stop picking fights below this hp fraction (0 = off)
+  healUntil: 0.95, // ...until back above this
   laserMemory: 60, // s to remember a laser pickup we saw
   laserDetour: 250,
   exploreUntil: 0, // s: explore for a laser until then (0 = off). sim: 200 -> -0.1, no gain
@@ -23,9 +26,9 @@ export const P = {
   laserScanUntil: 150, // s // m: go fetch a remembered laser this far, even mid-fight
   silentWalk: false, // REAL: batches 28/29 with silent walk scored 3.58/3.54 vs 4.25 without -> keep off
   silentFrac: 0.4, // move magnitude cap for silent walking (0.4 x 11.7 = 4.7 m/s)
-  backstab: 600, // target bonus when the enemy faces away from us
-  counterBonus: 400, // target bonus for weapon counters (laser vs mortar carrier, lightning vs laser carrier)
-  zoneVictim: 500, // target bonus for enemies standing outside the circle
+  backstab: 300, // target bonus when the enemy faces away from us
+  counterBonus: 200, // target bonus for weapon counters (laser vs mortar carrier, lightning vs laser carrier)
+  zoneVictim: 250, // target bonus for enemies standing outside the circle
   zoneHold: true, // never follow a target out of the circle
   droneLure: true, // when losing, retreat past a known drone
   preCharge: false, // batch 26 idea (real: no gain)

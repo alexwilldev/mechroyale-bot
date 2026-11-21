@@ -60,6 +60,8 @@ Noise: the same build varies about ±0.3 between runs (2.38 vs 2.71), so single-
 | bef1ad0 | Batch 22: laser 50, gun 45 | REAL 4.04 (leader now 5.69) -> range curve flat <=110 |
 | b7a7f6b | Batch 23: batch 20 ranges + lightning back on | REAL 3.65 (worse) |
 | 2e74457 (resubmit) | Batch 20 again | REAL 3.88 (true level ~4.0) |
+| 9c746d3 | Exp A: batch 20 + defensive upgrade order | REAL 4.04 (no gain) |
+| 770bbea | Exp B: batch 20 + never retreat, recover <40% | REAL 3.83 (no gain) |
 | (HEAD) | FROZEN: batch 20 behaviour on main; submit with blank commit field for lucky resubmits | - |
 Qualifying tip: only the best practice score counts and runs vary +-0.3, so resubmitting the best build (2e74457) can draw a higher score.
 

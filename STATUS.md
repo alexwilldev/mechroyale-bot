@@ -69,7 +69,9 @@ Noise: the same build varies about ±0.3 between runs (2.38 vs 2.71), so single-
 | 9ecf260 | Batch 25: 24 + laser peek (hide while charging/cooling, peek out to fire) (sim neutral) | ? |
 | 3da640b | Batch 26: 24+25 + laser pre-charge toward unseen footsteps (sim neutral) | REAL 3.71 (no gain; 24/25 never scored alone) |
 | af9372f | RE-FROZEN: batch 20 behaviour | - |
-| (next) | Batch 27 'predator': target backstabs (enemy facing away), weapon counters (laser->mortar carrier, lightning->laser carrier), zone victims, never chase out of zone, drone lure on retreat; silent walk OFF (sim -0.13) | sim ~neutral each |
+| 89439ec | Batch 27 'predator': backstab/counter/zone-victim targeting, zone hold, drone lure; silent walk OFF | REAL 4.25 (new best; 114th) |
+| (next) | Batch 28: 27 + silent walk ON | ? |
+| (next) | Batch 29: 28 + doubled predator bonuses (backstab 600, counter 400, zoneVictim 500) | ? |
 Qualifying tip: only the best practice score counts and runs vary +-0.3, so resubmitting the best build (2e74457) can draw a higher score.
 
 Baseline to beat: 1.15.

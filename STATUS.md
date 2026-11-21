@@ -28,8 +28,9 @@ Phase 0 + Phase 1 done → next: **Phase 2 (sandbox sim)**, then Phase 3 (combat
 | commit | what | score |
 | --- | --- | --- |
 | 17115f2/4414355 | Phase 0 turtle / Phase 1 map+nav | 2.38, 2.71 (17th; leader 4.77) |
-| a1eebe1 | Combat batch 1: focus fire, loot seeking, roaming, cover on reload/low hp, range keeping | ? |
-| (next) | Combat batch 2: laser + mortar dodge, A* cap 8k (tick max 6 ms in 1-CPU sandbox) | ? |
+| a1eebe1 | Combat batch 1: focus fire, loot seeking, roaming, cover on reload/low hp, range keeping | 3.35 (12th) |
+| e3d7d85 | Combat batch 2: laser + mortar dodge, A* cap 8k (tick max 6 ms in 1-CPU sandbox) | 3.48 (12th) |
+| (next) | Combat batch 3: laser aims hitscan (no gun lead), mortar leads target by flight time, recover state (hold still to regen < 60% hp) | ? |
 
 Baseline to beat: 1.15.
 

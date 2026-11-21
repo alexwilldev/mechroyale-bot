@@ -24,6 +24,8 @@ export const P = {
   lightningEnergyFloor: 12,
   replanEvery: 1.5, // s between A* replans toward the same goal
   maxExpand: 8000, // A* expansion cap per plan (bounds worst-case tick time)
+  laserLead: 0.1, // s: lead for hitscan laser (aim command latency)
+  recoverHp: 0.6, // below this hp fraction with no enemy in sight: hold still and regenerate
   laserDodgeYaw: 0.15, // rad: an enemy charging a laser aimed this close to us -> dodge sideways
   dodgeEnergy: 20, // keep this much energy before boosting to dodge
   endgameRadius: 70, // once the next circle is this small, stand on next_center exactly

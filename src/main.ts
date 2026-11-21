@@ -211,6 +211,9 @@ export class Turtle {
     } else if (dCenter > z.next_radius * P.zoneSafety || !me.in_zone) {
       goal = nc
       state = "rotate"
+    } else if (quiet && me.hp / me.max_hp < P.recoverHp) {
+      // hurt and nobody in sight: stand still (silent) and regenerate, facing where the damage came from
+      state = "recover"
     } else if (quiet) {
       // early game the whole current circle is fair game; later only what is inside the next one
       const zc = [z.center[0], z.center[1], 0]
@@ -365,16 +368,27 @@ export class Turtle {
           if (d < w.stats.range - 2 && Math.abs(wrap(yawTo(pos, center) - ayaw)) < cone * 0.8 && me.energy > P.lightningEnergyFloor)
             act.fire![i] = true
         } else if (w.kind === "laser" && target) {
-          this.laser(act, i, w, aligned, d)
-        } else if (w.kind === "mortar" && target && d > P.mortarMinRange) {
-          const mp = ballisticPitch(hdist(pos, target.pos), target.pos[2] - (pos[2] + 9.5), w.stats.speed, w.stats.gravity)
-          if (mp != null && !this.laserCharging(slots)) {
-            // only override aim with the mortar pitch when the gun isn't mid-burst
-            const gunBusy = gunSlot >= 0 && act.fire![gunSlot]
-            if (!gunBusy && w.cooldown <= 0) {
-              act.aim = [yawTo(pos, target.pos), mp]
-              if (Math.abs(wrap(act.aim[0] - ayaw)) < 0.04 && Math.abs(mp - apitch) < 0.04) act.fire![i] = true
-            }
+          // hitscan: aim at where the target will be when the aim command lands (~1 decision), not the gun lead
+          const full = (w.charge ?? 0) >= (w.stats.charge ?? 0.75) * 0.97
+          const lp = [center[0] + tv[0] * P.laserLead, center[1] + tv[1] * P.laserLead, center[2]]
+          const ly = yawTo(muzzle, lp), lpitch = Math.atan2(lp[2] - muzzle[2], hdist(muzzle, lp))
+          const lAligned = this.clear(muzzle, lp) && Math.abs(wrap(ly - ayaw)) < tol && Math.abs(lpitch - apitch) < tol + 0.02
+          if (full) act.aim = [ly, lpitch] // charged: the laser owns the aim
+          this.laser(act, i, w, lAligned, d)
+        } else if (w.kind === "mortar" && target && d > P.mortarMinRange && !this.laserCharging(slots)) {
+          // lead the shell: solve pitch for the current spot, then re-solve for where the target will be on landing
+          let tgt = target.pos
+          let mp = ballisticPitch(hdist(pos, tgt), tgt[2] - (pos[2] + 9.5), w.stats.speed, w.stats.gravity)
+          if (mp != null) {
+            const tf = hdist(pos, tgt) / (w.stats.speed * Math.cos(mp))
+            tgt = [tgt[0] + tv[0] * tf, tgt[1] + tv[1] * tf, tgt[2]]
+            mp = ballisticPitch(hdist(pos, tgt), tgt[2] - (pos[2] + 9.5), w.stats.speed, w.stats.gravity)
+          }
+          // only take over the aim when the gun is not mid-burst
+          const gunBusy = gunSlot >= 0 && act.fire![gunSlot]
+          if (mp != null && !gunBusy && w.cooldown <= 0) {
+            act.aim = [yawTo(pos, tgt), mp]
+            if (Math.abs(wrap(act.aim[0] - ayaw)) < 0.04 && Math.abs(mp - apitch) < 0.04) act.fire![i] = true
           }
         }
       })

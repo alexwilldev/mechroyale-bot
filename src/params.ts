@@ -23,8 +23,11 @@ export const P = {
   mortarMinRange: 18, // m: no mortar closer than this (self splash)
   lightningEnergyFloor: 12,
   replanEvery: 1.5, // s between A* replans toward the same goal
+  minReplan: 0.5, // s: hard floor between A* runs, whatever the reason
   maxExpand: 8000, // A* expansion cap per plan (bounds worst-case tick time)
   laserLead: 0.1, // s: lead for hitscan laser (aim command latency)
+  dropRange: 170, // m: go for supply drops this close when no enemy is in sight
+  dropLate: 12, // s: still go if we arrive at most this long after it lands
   recoverHp: 0.6, // below this hp fraction with no enemy in sight: hold still and regenerate
   laserDodgeYaw: 0.15, // rad: an enemy charging a laser aimed this close to us -> dodge sideways
   dodgeEnergy: 20, // keep this much energy before boosting to dodge

@@ -51,6 +51,7 @@ export class Turtle {
   route: { goal: V3; pts: number[][]; t: number } | null = null
   maxMs = 0
   lastTarget = -1
+  lastPlanT = -99
   dodgeSign = 1
   dodgeFlipT = 0
   roam: V3 | null = null
@@ -93,7 +94,8 @@ export class Turtle {
     }
     const r = this.route
     const stale = !r || hdist(r.goal, goal) > 6 || t - r.t > P.replanEvery || !r.pts.length || hdist(pos, r.pts[0]) > 12
-    if (stale) {
+    if (stale && t - this.lastPlanT >= P.minReplan) {
+      this.lastPlanT = t
       const pts = nav.path(pos[0], pos[1], goal[0], goal[1], P.maxExpand, true)
       this.route = pts && pts.length ? { goal: [...goal], pts, t } : null
     }
@@ -108,6 +110,20 @@ export class Turtle {
       }
     const y = yawTo(pos, aimPt)
     return [Math.cos(y), Math.sin(y)]
+  }
+
+  /** A supply drop worth going for: close enough to reach about when it lands, not held by someone else. */
+  pickDrop(obs: Observation, pos: V3): { pos: V3; radius: number } | null {
+    const speed = obs.self.stats.walk_speed ?? 11.7
+    let best: { pos: V3; radius: number } | null = null, bd = Infinity
+    for (const d of obs.drops ?? []) {
+      const dist = hdist(pos, d.pos)
+      if (dist > P.dropRange) continue
+      if (d.holder != null && d.holder !== obs.self.id && d.progress > 0) continue
+      if (dist / speed > d.lands_in + P.dropLate) continue // someone nearer will have it by then
+      if (dist < bd) (bd = dist), (best = { pos: d.pos, radius: d.radius ?? 8 })
+    }
+    return best
   }
 
   /** A nearby walkable point hidden from `threat` (by buildings), or null. */
@@ -151,9 +167,13 @@ export class Turtle {
     this.kills += killsNow
     if (obs.alive < this.prevAlive - killsNow) this.ffa = true
     this.prevAlive = obs.alive
-    for (const s of obs.sounds)
-      if (s.kind !== "step" && s.kind !== "drop" && s.kind !== "crate" && s.dist !== "far" && s.age < 0.5)
-        this.lastSound = { t, bearing: s.bearing }
+    // remember the most threatening recent sound: movement nearby (an approaching hunter) beats distant gunfire
+    let bestPri = 0
+    for (const s of obs.sounds) {
+      if (s.kind === "drop" || s.kind === "crate" || s.kind === "npc_gun" || s.dist === "far" || s.age > 0.6) continue
+      const pri = s.kind === "step" || s.kind === "boost" || s.kind === "jet" || s.kind === "laser_charge" ? 3 : s.dist === "near" ? 2 : 1
+      if (pri > bestPri) (bestPri = pri), (this.lastSound = { t, bearing: s.bearing })
+    }
 
     if (obs.offer) {
       const ids = obs.offer.choices.map((c) => c.id)
@@ -205,12 +225,17 @@ export class Turtle {
     const dCenter = hdist(pos, nc)
     let goal: V3 | null = null
     let state = "hold"
+    let dropGoal: { pos: V3; radius: number } | null = null
     if (z.next_radius <= P.endgameRadius) {
       if (dCenter > 1.5) goal = nc
       state = "endgame"
     } else if (dCenter > z.next_radius * P.zoneSafety || !me.in_zone) {
       goal = nc
       state = "rotate"
+    } else if (quiet && (dropGoal = this.pickDrop(obs, pos))) {
+      // supply drop in reach with nobody around: stand in its ring until captured (3 cubes, full hp/energy)
+      goal = hdist(pos, dropGoal.pos) > dropGoal.radius - 2.5 ? dropGoal.pos : null
+      state = "drop"
     } else if (quiet && me.hp / me.max_hp < P.recoverHp) {
       // hurt and nobody in sight: stand still (silent) and regenerate, facing where the damage came from
       state = "recover"

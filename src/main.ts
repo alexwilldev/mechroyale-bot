@@ -33,6 +33,7 @@ function ballisticPitch(d: number, h: number, v: number, g: number): number | nu
 }
 
 export class Turtle {
+  p: typeof P = P
   name = "mr-turtle"
   cfg: Hello["config"]
   strafeSign = 1
@@ -52,6 +53,10 @@ export class Turtle {
   maxMs = 0
   lastTarget = -1
   lastPlanT = -99
+  visited = new Set<string>()
+  explore: V3 | null = null
+  exploreT = 0
+  otherDeaths = 0
   lasers = new Map<number, { pos: V3; t: number }>()
   roofs: { id: number; cx: number; cy: number; top: number; launch: number[] }[] = []
   roofNow: { id: number; cx: number; cy: number; top: number; launch: number[] } | null = null
@@ -62,7 +67,7 @@ export class Turtle {
   cover: V3 | null = null
   coverT = -99
   /** Over the soft per-tick budget: skip optional work (replans, cover/hold searches). */
-  late(ms = P.softBudgetMs) {
+  late(ms = this.p.softBudgetMs) {
     return performance.now() - this.t0 > ms
   }
   hold: V3 | null = null
@@ -72,7 +77,8 @@ export class Turtle {
   roam: V3 | null = null
   roamUntil = 0
 
-  constructor(h: Hello) {
+  constructor(h: Hello, over: Partial<typeof P> = {}) {
+    this.p = { ...P, ...over }
     this.cfg = h.config
     try {
       this.map = GameMap.load(h.map.dir)
@@ -92,7 +98,7 @@ export class Turtle {
         cy /= m
         area = Math.abs(area) / 2
         const top = this.map!.surfaceAt(cx, cy), g = this.map!.groundAt(cx, cy)
-        if (area < P.roofArea || top - g < P.roofMin || top - g > P.roofMax) return
+        if (area < this.p.roofArea || top - g < this.p.roofMin || top - g > this.p.roofMax) return
         const k = this.nav!.nearestFree(cx, cy, 80)
         if (k < 0) return
         this.roofs.push({ id, cx, cy, top, launch: this.nav!.center(k) })
@@ -102,7 +108,7 @@ export class Turtle {
       for (let k = 0; k < 60; k++) {
         const x1 = b.minX + ((k * 97) % 900), y1 = b.minY + ((k * 61) % 600)
         const x2 = b.minX + ((k * 53) % 900), y2 = b.minY + ((k * 89) % 600)
-        this.nav.path(x1, y1, x2, y2, P.maxExpand, true)
+        this.nav.path(x1, y1, x2, y2, this.p.maxExpand, true)
         this.nav.lineFree(x1, y1, x2, y2)
         this.map.los([x1, y1, 8], [x2, y2, 5])
       }
@@ -127,10 +133,10 @@ export class Turtle {
       return direct()
     }
     const r = this.route
-    const stale = !r || hdist(r.goal, goal) > 6 || t - r.t > P.replanEvery || !r.pts.length || hdist(pos, r.pts[0]) > 12
-    if (stale && t - this.lastPlanT >= P.minReplan && !this.late()) {
+    const stale = !r || hdist(r.goal, goal) > 6 || t - r.t > this.p.replanEvery || !r.pts.length || hdist(pos, r.pts[0]) > 12
+    if (stale && t - this.lastPlanT >= this.p.minReplan && !this.late()) {
       this.lastPlanT = t
-      const pts = nav.path(pos[0], pos[1], goal[0], goal[1], P.maxExpand, true, this.t0 + P.hardBudgetMs)
+      const pts = nav.path(pos[0], pos[1], goal[0], goal[1], this.p.maxExpand, true, this.t0 + this.p.hardBudgetMs)
       this.route = pts && pts.length ? { goal: [...goal], pts, t } : null
     }
     const rt = this.route
@@ -146,13 +152,32 @@ export class Turtle {
     return [Math.cos(y), Math.sin(y)]
   }
 
+  /** Waypoint toward the least-visited ground (50 m cells) inside the next circle. */
+  explorePoint(pos: V3, t: number, nc: V3, nr: number): V3 {
+    if (this.explore && t < this.exploreT && hdist(pos, this.explore) > 15) return this.explore
+    const key = (x: number, y: number) => `${Math.round(x / 50)},${Math.round(y / 50)}`
+    let best: V3 = nc, bestS = -Infinity
+    for (let k = 0; k < 16; k++) {
+      const a = Math.random() * TAU, r = 60 + Math.random() * 180
+      const x = pos[0] + Math.cos(a) * r, y = pos[1] + Math.sin(a) * r
+      if (hdist([x, y], nc) > nr * 0.85 || (this.nav && !this.nav.isFree(x, y))) continue
+      let fresh = 0
+      for (let dx = -2; dx <= 2; dx++) for (let dy = -2; dy <= 2; dy++) if (!this.visited.has(key(x + dx * 50, y + dy * 50))) fresh++
+      const s = fresh - r * 0.01
+      if (s > bestS) (bestS = s), (best = [x, y, 0])
+    }
+    this.explore = best
+    this.exploreT = t + 12
+    return best
+  }
+
   /** Nearest usable roof whose centre is inside the safe circle. */
   pickRoof(pos: V3, center: V3, safeR: number) {
     let best = null, bd = Infinity
     for (const r of this.roofs) {
       if (this.badRoofs.has(r.id) || hdist([r.cx, r.cy], center) > safeR) continue
       const d = hdist(pos, [r.cx, r.cy])
-      if (d < bd && d < P.roofSearch) (bd = d), (best = r)
+      if (d < bd && d < this.p.roofSearch) (bd = d), (best = r)
     }
     return best
   }
@@ -161,8 +186,8 @@ export class Turtle {
   findHoldSpot(pos: V3, center: V3, safeR: number): V3 | null {
     if (!this.map || !this.nav) return null
     let best: V3 | null = null, bestCost = Infinity
-    for (let k = 0; k < P.holdSamples && !this.late(P.hardBudgetMs); k++) {
-      const a = Math.random() * TAU, r = k === 0 ? 0 : 6 + Math.random() * P.holdSearch
+    for (let k = 0; k < this.p.holdSamples && !this.late(this.p.hardBudgetMs); k++) {
+      const a = Math.random() * TAU, r = k === 0 ? 0 : 6 + Math.random() * this.p.holdSearch
       const x = pos[0] + Math.cos(a) * r, y = pos[1] + Math.sin(a) * r
       if (hdist([x, y], center) > safeR || !this.nav.isFree(x, y)) continue
       const s = this.map.surfaceAt(x, y, pos[2] + 2)
@@ -170,7 +195,7 @@ export class Turtle {
       let open = 0
       for (let d = 0; d < 8; d++) {
         const b = (d / 8) * TAU
-        if (this.map.los(eye, [x + Math.cos(b) * P.holdRay, y + Math.sin(b) * P.holdRay, s + 8], 1)) open++
+        if (this.map.los(eye, [x + Math.cos(b) * this.p.holdRay, y + Math.sin(b) * this.p.holdRay, s + 8], 1)) open++
       }
       const cost = open * 10 + r * 0.3
       if (cost < bestCost) (bestCost = cost), (best = [x, y, s])
@@ -184,9 +209,9 @@ export class Turtle {
     let best: { pos: V3; radius: number } | null = null, bd = Infinity
     for (const d of obs.drops ?? []) {
       const dist = hdist(pos, d.pos)
-      if (dist > P.dropRange) continue
+      if (dist > this.p.dropRange) continue
       if (d.holder != null && d.holder !== obs.self.id && d.progress > 0) continue
-      if (dist / speed > d.lands_in + P.dropLate) continue // someone nearer will have it by then
+      if (dist / speed > d.lands_in + this.p.dropLate) continue // someone nearer will have it by then
       if (dist < bd) (bd = dist), (best = { pos: d.pos, radius: d.radius ?? 8 })
     }
     return best
@@ -199,7 +224,7 @@ export class Turtle {
     const away = yawTo(threat, pos)
     let best: V3 | null = null, bestCost = Infinity
     for (const r of [10, 18, 28])
-      for (let k = 0; k < 12 && !this.late(P.hardBudgetMs); k++) {
+      for (let k = 0; k < 12 && !this.late(this.p.hardBudgetMs); k++) {
         const a = (k / 12) * TAU
         const x = pos[0] + Math.cos(a) * r, y = pos[1] + Math.sin(a) * r
         if (!this.nav.isFree(x, y) || !this.nav.lineFree(pos[0], pos[1], x, y)) continue
@@ -232,7 +257,12 @@ export class Turtle {
       if (e.type === "kill") killsNow++
     }
     this.kills += killsNow
-    if (obs.alive < this.prevAlive - killsNow) this.ffa = true
+    // FFA detection: mechs dying without our kills means others fight each other (practice house bots never do)
+    if (obs.alive < this.prevAlive - killsNow) this.otherDeaths += this.prevAlive - killsNow - obs.alive
+    if (!this.ffa && this.otherDeaths >= this.p.ffaDeaths) {
+      this.ffa = true
+      this.p = { ...this.p, ...this.p.ffaOverrides } // switch to the free-for-all survival profile
+    }
     this.prevAlive = obs.alive
     // remember the most threatening recent sound: movement nearby (an approaching hunter) beats distant gunfire
     let bestPri = 0
@@ -247,21 +277,22 @@ export class Turtle {
       let best = 0
       let bestRank = 1e9
       ids.forEach((id, i) => {
-        const r = P.upgradeOrder.indexOf(id)
+        const r = this.p.upgradeOrder.indexOf(id)
         const rank = r < 0 ? 999 : r
         if (rank < bestRank) (bestRank = rank), (best = i)
       })
       act.pick = best
     }
 
+    for (let dx = -2; dx <= 2; dx++) for (let dy = -2; dy <= 2; dy++) this.visited.add(`${Math.round(pos[0] / 50) + dx},${Math.round(pos[1] / 50) + dy}`)
     // --- laser memory: the laser roughly doubles our kill rate, so remember every one we see ---
     const hasLaser = me.weapons.some((w) => w?.kind === "laser")
     for (const p of obs.pickups) if (p.kind === "laser") this.lasers.set(p.id, { pos: p.pos, t })
     for (const [id, l] of this.lasers)
-      if (t - l.t > P.laserMemory || (hdist(pos, l.pos) < 6 && !obs.pickups.some((p) => p.id === id))) this.lasers.delete(id)
+      if (t - l.t > this.p.laserMemory || (hdist(pos, l.pos) < 6 && !obs.pickups.some((p) => p.id === id))) this.lasers.delete(id)
     let laserGoal: V3 | null = null
-    if (!hasLaser && me.hp / me.max_hp > P.retreatHp) {
-      let bd = t < 60 ? P.laserDetourEarly : P.laserDetour
+    if (!hasLaser && me.hp / me.max_hp > this.p.retreatHp) {
+      let bd = t < 60 ? this.p.laserDetourEarly : this.p.laserDetour
       for (const l of this.lasers.values()) {
         const d = hdist(pos, l.pos)
         const zc = obs.zone.center, safe = hdist(l.pos, [zc[0], zc[1]]) < obs.zone.radius - 25 && hdist(l.pos, obs.zone.next_center) < obs.zone.next_radius + 40
@@ -270,7 +301,10 @@ export class Turtle {
     }
 
     // --- target selection ---
-    const mechs = obs.mechs.filter((m) => m.kind === "mech")
+    // engage only mechs within engageRange, plus anyone who shot us recently (FFA survival lever)
+    const mechs = obs.mechs.filter(
+      (m) => m.kind === "mech" && (hdist(m.pos, pos) <= this.p.engageRange || (m.id === this.lastDamage.by && t - this.lastDamage.t < 6)),
+    )
     const npcs = obs.mechs.filter((m) => m.kind === "npc")
     let target: ActorObs | null = null
     if (mechs.length) {
@@ -278,9 +312,9 @@ export class Turtle {
       const eyeP = [pos[0], pos[1], pos[2] + (me.stats.muzzle_height ?? 7)]
       const score = (m: ActorObs) =>
         (m.hp ?? 1400) +
-        hdist(m.pos, pos) * P.targetDistW -
+        hdist(m.pos, pos) * this.p.targetDistW -
         (m.id === this.lastDamage.by && t - this.lastDamage.t < 3 ? 250 : 0) -
-        (m.id === this.lastTarget ? P.lockBonus : 0) +
+        (m.id === this.lastTarget ? this.p.lockBonus : 0) +
         (this.clear(eyeP, [m.pos[0], m.pos[1], m.pos[2] + 4.5]) ? 0 : 900)
       target = mechs.reduce((a, b) => (score(a) <= score(b) ? a : b))
       this.lastTarget = target.id
@@ -290,9 +324,9 @@ export class Turtle {
     if (!target) {
       const npcAttacker = npcs.find((n) => n.id === this.lastDamage.by && t - this.lastDamage.t < 3)
       // only pick fights with drones when healthy; always answer one that is shooting us
-      const healthy = me.hp / me.max_hp >= P.npcHuntHp
+      const healthy = me.hp / me.max_hp >= this.p.npcHuntHp
       const npcNear = healthy
-        ? npcs.filter((n) => hdist(n.pos, pos) < P.npcRange).sort((a, b) => hdist(a.pos, pos) - hdist(b.pos, pos))[0]
+        ? npcs.filter((n) => hdist(n.pos, pos) < this.p.npcRange).sort((a, b) => hdist(a.pos, pos) - hdist(b.pos, pos))[0]
         : undefined
       target = npcAttacker ?? npcNear ?? null
     }
@@ -300,7 +334,7 @@ export class Turtle {
       const eye = [pos[0], pos[1], pos[2] + (me.stats.muzzle_height ?? 7)]
       crateTarget =
         obs.crates
-          .filter((c) => hdist(c.pos, pos) < P.crateShootRange)
+          .filter((c) => hdist(c.pos, pos) < this.p.crateShootRange)
           .sort((a, b) => hdist(a.pos, pos) - hdist(b.pos, pos))
           .find((c) => this.clear(eye, [c.pos[0], c.pos[1], c.pos[2] + 1.2])) ?? null
     }
@@ -312,17 +346,21 @@ export class Turtle {
     let goal: V3 | null = null
     let state = "hold"
     let dropGoal: { pos: V3; radius: number } | null = null
-    if (z.next_radius <= P.endgameRadius) {
+    if (z.next_radius <= this.p.endgameRadius) {
       if (dCenter > 1.5) goal = nc
       state = "endgame"
-    } else if (dCenter > z.next_radius * P.zoneSafety || !me.in_zone) {
+    } else if (dCenter > z.next_radius * this.p.zoneSafety || !me.in_zone) {
       goal = nc
       state = "rotate"
+    } else if (!hasLaser && t < this.p.exploreUntil && me.hp / me.max_hp > this.p.retreatHp) {
+      // unarmed: head for a remembered laser, else explore unseen ground to find one (fights drift along)
+      goal = laserGoal ?? this.explorePoint(pos, t, nc, z.next_radius)
+      state = laserGoal ? "seek-laser" : "explore"
     } else if (quiet && (dropGoal = this.pickDrop(obs, pos))) {
       // supply drop in reach with nobody around: stand in its ring until captured (3 cubes, full hp/energy)
       goal = hdist(pos, dropGoal.pos) > dropGoal.radius - 2.5 ? dropGoal.pos : null
       state = "drop"
-    } else if (quiet && me.hp / me.max_hp < P.recoverHp) {
+    } else if (quiet && me.hp / me.max_hp < this.p.recoverHp) {
       // hurt and nobody in sight: stand still (silent) and regenerate, facing where the damage came from
       state = "recover"
     } else if (quiet) {
@@ -331,10 +369,10 @@ export class Turtle {
       const early = t < z.shrink_start - 10
       const inPlay = (p: V3) => (early ? hdist(p, zc) < z.radius * 0.9 : hdist(p, nc) < z.next_radius * 0.9)
       const loot = [
-        ...obs.cubes.filter((c) => hdist(c.pos, pos) < P.lootDetour).map((c) => ({ pos: c.pos, w: 1.2 })),
+        ...obs.cubes.filter((c) => hdist(c.pos, pos) < this.p.lootDetour).map((c) => ({ pos: c.pos, w: 1.2 })),
         ...obs.pickups
-          .filter((p) => this.wantPickup(me.weapons, p.kind) > 0 && hdist(p.pos, pos) < P.pickupDetour)
-          .map((p) => ({ pos: p.pos, w: 1 + P.weaponScore[p.kind] })),
+          .filter((p) => this.wantPickup(me.weapons, p.kind) > 0 && hdist(p.pos, pos) < this.p.pickupDetour)
+          .map((p) => ({ pos: p.pos, w: 1 + this.p.weaponScore[p.kind] })),
         ...(crateTarget && hdist(crateTarget.pos, pos) > 25 ? [{ pos: crateTarget.pos, w: 0.8 }] : []),
       ]
         .filter((l) => inPlay(l.pos) && Math.abs(l.pos[2] - pos[2]) < 6)
@@ -342,7 +380,7 @@ export class Turtle {
       if (loot) {
         goal = loot.pos
         state = "loot"
-      } else if (!me.weapons[1] || t < P.roamUntilT || (me.cubes < P.farmCubes && t < P.farmUntilT)) {
+      } else if (!me.weapons[1] || t < this.p.roamUntilT || (me.cubes < this.p.farmCubes && t < this.p.farmUntilT)) {
         // roam inside the safe area to find weapons and crates
         if (!this.roam || t > this.roamUntil || hdist(pos, this.roam) < 8) {
           const a = Math.random() * TAU, r = Math.sqrt(Math.random()) * z.next_radius * 0.6
@@ -354,8 +392,8 @@ export class Turtle {
       } else {
         // nothing to do: camp on a roof near the circle centre if we can, else wait at a covered spot
         const ground = this.map ? this.map.groundAt(pos[0], pos[1]) : pos[2]
-        const onRoof = me.grounded && pos[2] > ground + P.roofMin - 1
-        const r = P.useRoofs ? (this.roofNow && onRoof ? this.roofNow : this.pickRoof(pos, nc, z.next_radius * P.zoneSafety)) : null
+        const onRoof = me.grounded && pos[2] > ground + this.p.roofMin - 1
+        const r = this.p.useRoofs ? (this.roofNow && onRoof ? this.roofNow : this.pickRoof(pos, nc, z.next_radius * this.p.zoneSafety)) : null
         if (r && onRoof) {
           this.roofNow = r
           state = "roof"
@@ -366,9 +404,9 @@ export class Turtle {
           goal = r.launch
         } else {
         // re-search at most every 10 s (a failed search must not retry every tick)
-        if (t > this.holdUntil || (this.hold && hdist(this.hold, nc) > z.next_radius * P.zoneSafety)) {
+        if (t > this.holdUntil || (this.hold && hdist(this.hold, nc) > z.next_radius * this.p.zoneSafety)) {
           if (this.late()) this.holdUntil = t + 0.5 // out of time this tick: try again shortly
-          else (this.hold = this.findHoldSpot(pos, nc, z.next_radius * P.zoneSafety)), (this.holdUntil = t + 10)
+          else (this.hold = this.findHoldSpot(pos, nc, z.next_radius * this.p.zoneSafety)), (this.holdUntil = t + 10)
         }
         if (this.hold && hdist(pos, this.hold) > 3) goal = this.hold
         state = "hold"
@@ -387,8 +425,8 @@ export class Turtle {
       const laser = slots0.find((w) => w?.kind === "laser")
       const gunDown = !gun || (gun.reload ?? 0) > 0 || (gun.ammo ?? 1) === 0
       const otherReady =
-        (laser && laser.cooldown <= 0.2) || (lightning && d < lightning.stats.range && me.energy > P.lightningEnergyFloor)
-      const losing = me.hp / me.max_hp < P.retreatHp && (target.hp ?? 1400) > me.hp * 1.1
+        (laser && laser.cooldown <= 0.2) || (lightning && d < lightning.stats.range && me.energy > this.p.lightningEnergyFloor)
+      const losing = me.hp / me.max_hp < this.p.retreatHp && (target.hp ?? 1400) > me.hp * 1.1
       const needCover = (gunDown && !otherReady) || losing
       // reuse a recent cover point; search again at most every 0.5 s and only with time left this tick
       if (needCover && (t - this.coverT > 0.5 || !this.cover) && !this.late()) (this.cover = this.findCover(pos, target.pos)), (this.coverT = t)
@@ -404,11 +442,11 @@ export class Turtle {
       } else {
         if (t > this.strafeUntil) {
           this.strafeSign = Math.random() < 0.5 ? -1 : 1
-          this.strafeUntil = t + P.strafeFlip * (0.6 + Math.random() * 0.8)
+          this.strafeUntil = t + this.p.strafeFlip * (0.6 + Math.random() * 0.8)
         }
         // hold our weapon's best range: close in with lightning, keep gun/laser distance otherwise
         // laser outranges everything and can't miss: fight from far so their bullets have time to miss us
-        const want = lightning && me.energy > 25 ? P.lightningRange : laser ? P.laserRange : P.gunRange
+        const want = lightning && me.energy > 25 ? this.p.lightningRange : laser ? this.p.laserRange : this.p.gunRange
         const radial = Math.max(-1, Math.min(1, (d - want) / (want * 0.5)))
         const py = ty0 + (this.strafeSign * Math.PI) / 2
         mv = [mv[0] * 0.4 + Math.cos(py) + radial * Math.cos(ty0), mv[1] * 0.4 + Math.sin(py) + radial * Math.sin(ty0)]
@@ -421,7 +459,7 @@ export class Turtle {
     for (const m of mechs) {
       if (!m.charging) continue
       const off = Math.abs(wrap(m.aim[0] - yawTo(m.pos, pos)))
-      if (off < P.laserDodgeYaw) {
+      if (off < this.p.laserDodgeYaw) {
         const py = yawTo(m.pos, pos) + (this.dodgeSign * Math.PI) / 2
         mv = [Math.cos(py) * 1.5 + mv[0] * 0.3, Math.sin(py) * 1.5 + mv[1] * 0.3]
         dodge = true
@@ -463,11 +501,11 @@ export class Turtle {
       this.stuckT = 0
     }
     let boost =
-      !me.in_zone || (state === "rotate" && t > z.shrink_start - 10 && dCenter > z.next_radius) || (dodge && me.energy > P.dodgeEnergy)
+      !me.in_zone || (state === "rotate" && t > z.shrink_start - 10 && dCenter > z.next_radius) || (dodge && me.energy > this.p.dodgeEnergy)
     // strafe at boost speed during fights, with hysteresis so energy is left for dodges
     if (state.startsWith("fight") || state.startsWith("endgame-fight")) {
-      if (me.energy > P.fightBoostOn) this.fightBoost = true
-      else if (me.energy < P.fightBoostOff) this.fightBoost = false
+      if (me.energy > this.p.fightBoostOn) this.fightBoost = true
+      else if (me.energy < this.p.fightBoostOff) this.fightBoost = false
       if (this.fightBoost && me.grounded) boost = true
     } else this.fightBoost = false
     if (t < this.unstickUntil) {
@@ -491,7 +529,7 @@ export class Turtle {
         boost = !me.grounded && pos[2] < rr.top + 2 && me.energy > 2
         this.unstickUntil = 0
         state = "climb"
-        if (t - this.climbT > P.climbTimeout) {
+        if (t - this.climbT > this.p.climbTimeout) {
           this.badRoofs.add(rr.id)
           this.roofNow = null
           this.climbT = 0
@@ -502,7 +540,7 @@ export class Turtle {
     if (this.map && me.grounded && !state.startsWith("rotate") && me.in_zone) {
       const gnd = this.map.groundAt(pos[0], pos[1])
       const mn = Math.hypot(mv[0], mv[1])
-      if (pos[2] > gnd + P.roofMin - 1 && mn > 0.1) {
+      if (pos[2] > gnd + this.p.roofMin - 1 && mn > 0.1) {
         const ax = pos[0] + (mv[0] / mn) * 4, ay = pos[1] + (mv[1] / mn) * 4
         if (this.map.surfaceAt(ax, ay, pos[2] + 1.2) < pos[2] - 1.5) mv = [0, 0]
       }
@@ -543,20 +581,20 @@ export class Turtle {
           if (aligned && d < w.stats.range && (w.ammo ?? 1) > 0) act.fire![i] = true
           if ((w.ammo ?? 1) === 0 && !w.reload) act.reload = true
           // no shot available right now: top up so the next exchange starts with a fuller magazine
-          else if (!lineOk && !w.reload && (w.ammo ?? 99) < w.stats.mag * P.reloadBelow) act.reload = true
+          else if (!lineOk && !w.reload && (w.ammo ?? 99) < w.stats.mag * this.p.reloadBelow) act.reload = true
         } else if (w.kind === "lightning") {
           const cone = ((w.stats.cone_deg ?? 30) * Math.PI) / 360
-          if (d < w.stats.range - 2 && Math.abs(wrap(yawTo(pos, center) - ayaw)) < cone * 0.8 && me.energy > P.lightningEnergyFloor)
+          if (d < w.stats.range - 2 && Math.abs(wrap(yawTo(pos, center) - ayaw)) < cone * 0.8 && me.energy > this.p.lightningEnergyFloor)
             act.fire![i] = true
         } else if (w.kind === "laser" && target) {
           // hitscan: aim at where the target will be when the aim command lands (~1 decision), not the gun lead
           const full = (w.charge ?? 0) >= (w.stats.charge ?? 0.75) * 0.97
-          const lp = [center[0] + tv[0] * P.laserLead, center[1] + tv[1] * P.laserLead, center[2]]
+          const lp = [center[0] + tv[0] * this.p.laserLead, center[1] + tv[1] * this.p.laserLead, center[2]]
           const ly = yawTo(muzzle, lp), lpitch = Math.atan2(lp[2] - muzzle[2], hdist(muzzle, lp))
           const lAligned = this.clear(muzzle, lp) && Math.abs(wrap(ly - ayaw)) < tol && Math.abs(lpitch - apitch) < tol + 0.02
           if (full) act.aim = [ly, lpitch] // charged: the laser owns the aim
           this.laser(act, i, w, lAligned, d)
-        } else if (w.kind === "mortar" && target && d > P.mortarMinRange && !this.laserCharging(slots)) {
+        } else if (w.kind === "mortar" && target && d > this.p.mortarMinRange && !this.laserCharging(slots)) {
           // lead the shell: solve pitch for the current spot, then re-solve for where the target will be on landing
           let tgt = target.pos
           let mp = ballisticPitch(hdist(pos, tgt), tgt[2] - (pos[2] + 9.5), w.stats.speed, w.stats.gravity)
@@ -581,9 +619,9 @@ export class Turtle {
     }
     if (!aimSet) {
       let yaw: number
-      if (t - this.lastDamage.t < P.threatMemory) yaw = this.lastDamage.bearing
+      if (t - this.lastDamage.t < this.p.threatMemory) yaw = this.lastDamage.bearing
       else if (t - this.lastSound.t < 2) yaw = this.lastSound.bearing
-      else if (!hasLaser && P.laserScanSpin > 0 && t < P.laserScanUntil) yaw = this.scanYaw += P.laserScanSpin // spin to spot lasers
+      else if (!hasLaser && this.p.laserScanSpin > 0 && t < this.p.laserScanUntil) yaw = this.scanYaw += this.p.laserScanSpin // spin to spot lasers
       else if (n > 0.3) yaw = Math.atan2(mv[1], mv[0]) + Math.sin(t * 1.7) * 0.9 // sweep while walking
       else yaw = this.scanYaw += 0.12
       act.aim = [yaw, 0]
@@ -610,7 +648,7 @@ export class Turtle {
     if (kind === "gun" || slots.some((w) => w?.kind === kind)) return 0
     if (slots.some((w) => w === null)) return 1
     const other = slots.find((w) => w && w.kind !== "gun")
-    if (other && other.kind !== "laser" && !(other.charge && other.charge > 0) && P.weaponScore[kind] > P.weaponScore[other.kind]) return 2
+    if (other && other.kind !== "laser" && !(other.charge && other.charge > 0) && this.p.weaponScore[kind] > this.p.weaponScore[other.kind]) return 2
     return 0
   }
 

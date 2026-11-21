@@ -12,8 +12,12 @@ export const P = {
   lootDetour: 80, // m: walk to visible cubes this close when no threat
   pickupDetour: 160, // m: walk to wanted weapon pickups this close when no threat
   targetDistW: 4,
+  ffaDeaths: 2, // unexplained deaths before we decide it's a free-for-all
+  ffaOverrides: {} as Record<string, number>, // sim FFA h2h of engageRange=60 was +0.7, -0.84, 0.0 on 3 seed sets: no reliable edge, so no switch
+  engageRange: 9999, // m: only pick fights with mechs this close (or that shot us)
   laserMemory: 60, // s to remember a laser pickup we saw
   laserDetour: 250,
+  exploreUntil: 0, // s: explore for a laser until then (0 = off). sim: 200 -> -0.1, no gain
   laserDetourEarly: 400, // m: in the first minute, go further for a laser
   laserScanSpin: 0.35, // rad per decision to spin the torso while unarmed and idle (0 = off)
   laserScanUntil: 150, // s // m: go fetch a remembered laser this far, even mid-fight

@@ -5,7 +5,8 @@ Full plan: `~/.claude/plans/create-a-plan-to-vast-sifakis.md`. Cutoff **Sun 11:0
 ## Current phase
 SIMULATOR BUILT (sim/sim.ts + sim/run.ts). Calibrated: old build scores ~3.4 in sim vs ~3.5 real. Usage:
 `bun sim/run.ts --n 100 --seed 5 [--set key=val,...] [--start laser] [--svg /tmp/x.svg]` (100 matches ~25 s).
-Sim findings: laser from start = 5.5 pts (vs 3.6) -> getting a laser early is THE lever; gun range 130 > 90 (+0.5); strong target lock hurts; roofs/boost/retreat/recover ~no effect; lightning closing hurts.
+Sim research round (Fri 23:00): practice params are at a local optimum (20+ variants within noise of base 4.95 over 3 seed sets). Boost-strafing matters (-0.66 if off). Laser from start = 6.05 ceiling but exploring for lasers didn't help (availability-limited). FFA: aggressive bot ~9 pts (6-7th of 16); passive engageRange=60 inconsistent (+0.7/-0.84/0.0) -> not used. Per-bot params: Turtle(h, overrides); FFA head-to-head: --mode ffa --ours 4 --nb 4 --b k=v. Sweep helpers in sim/sweep/.
+Sim findings (earlier): laser from start = 5.5 pts (vs 3.6) -> getting a laser early is THE lever; gun range 130 > 90 (+0.5); strong target lock hurts; roofs/boost/retreat/recover ~no effect; lightning closing hurts.
 PIVOT (user call): sim paused; shipping combat batches straight to the real scorer. No match replays are available, so the scorer is the only feedback.
 Phase 0 + Phase 1 done → next: **Phase 2 (sandbox sim)**, then Phase 3 (combat core).
 

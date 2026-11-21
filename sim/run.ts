@@ -10,6 +10,14 @@ import { P } from "../src/params.ts"
 const args = Object.fromEntries(process.argv.slice(2).reduce((acc: string[][], a, i, all) => (a.startsWith("--") ? [...acc, [a.slice(2), all[i + 1] ?? ""]] : acc), []))
 const N = Number(args.n ?? 20), SEED = Number(args.seed ?? 1), MODE = (args.mode ?? "practice") as "practice" | "ffa"
 const realRandom = Math.random
+// --b key=val,... : variant B bots (FFA head-to-head), --nb count (default 0)
+const overB: any = {}
+for (const kv of (args.b ?? "").split(",").filter(Boolean)) {
+  const [k, v] = kv.split("=")
+  overB[k] = v === "true" ? true : v === "false" ? false : Number(v)
+}
+const nB = Number(args.nb ?? 0)
+const ptsA: number[] = [], ptsB: number[] = []
 // --set key=val,key2=val2 overrides bot params (A/B tests without code edits)
 for (const kv of (args.set ?? "").split(",").filter(Boolean)) {
   const [k, v] = kv.split("=")
@@ -22,11 +30,12 @@ const t0 = performance.now()
 for (let k = 0; k < N; k++) {
   Math.random = rng(SEED * 7919 + k * 104729) // reproducible bot randomness
   const nOurs = MODE === "ffa" ? Number(args.ours ?? 4) : 1
-  const m = new Match({ seed: SEED * 1000 + k, mode: MODE, bots: Array.from({ length: nOurs }, () => (h: any) => new Turtle(h)), huntersAtStart: Number(args.hunters ?? 1), allHuntT: Number(args.allHunt ?? 300), trace: !!args.svg && k === 0, idleEngage: Number(args.idle ?? 45), aimMul: Number(args.aim ?? 1), startWeapon: args.start || undefined })
+  const m = new Match({ seed: SEED * 1000 + k, mode: MODE, bots: [...Array.from({ length: nOurs }, () => (h: any) => new Turtle(h)), ...Array.from({ length: nB }, () => (h: any) => new Turtle(h, overB))], huntersAtStart: Number(args.hunters ?? 1), allHuntT: Number(args.allHunt ?? 300), trace: !!args.svg && k === 0, idleEngage: Number(args.idle ?? 45), aimMul: Number(args.aim ?? 1), startWeapon: args.start || undefined })
   m.run()
   Math.random = realRandom
   if (k === 0) traced = m
   for (const me of m.mechs.filter((x) => x.bot)) {
+    ;(me.id < nOurs ? ptsA : ptsB).push(16 - me.place)
     agg.pts.push(16 - me.place)
     agg.kills.push(me.kills)
     agg.deathT.push(me.alive ? m.t : me.log.deathT)
@@ -46,6 +55,7 @@ for (let k = 0; k < N; k++) {
     agg.weapons[ws] = (agg.weapons[ws] ?? 0) + 1
   }
 }
+const nOursG = MODE === "ffa" ? Number(args.ours ?? 4) : 1
 const mean = (a: number[]) => a.reduce((s, x) => s + x, 0) / Math.max(1, a.length)
 const sd = (a: number[]) => Math.sqrt(mean(a.map((x) => (x - mean(a)) ** 2)))
 agg.ms.sort((a: number, b: number) => a - b)
@@ -56,6 +66,7 @@ console.log(`POINTS mean ${mean(agg.pts).toFixed(2)} (sd ${sd(agg.pts).toFixed(2
 const lt = (agg.laserT ?? []).slice().sort((a: number, b: number) => a - b)
 console.log(`laser acquired: by 15s ${lt.filter((x: number) => x <= 15).length}%  by 30s ${lt.filter((x: number) => x <= 30).length}%  by 60s ${lt.filter((x: number) => x <= 60).length}%  ever ${lt.filter((x: number) => x < 999).length}%  (n=${lt.length})`)
 console.log(`death by: ${fmt(agg.deathBy)}`)
+if (nB) console.log(`HEAD2HEAD A(${nOursG}) ${mean(ptsA).toFixed(2)} (se ${(sd(ptsA) / Math.sqrt(ptsA.length)).toFixed(2)})  vs  B(${nB}) ${mean(ptsB).toFixed(2)} (se ${(sd(ptsB) / Math.sqrt(ptsB.length)).toFixed(2)})`)
 console.log(`dmg taken (total): ${fmt(agg.dmgIn)}`)
 console.log(`shots: ${fmt(agg.shots)}   hits: ${fmt(agg.hits)}   hit%: ${Object.keys(agg.shots).map((k) => `${k}=${((100 * (agg.hits[k] ?? 0)) / agg.shots[k]).toFixed(0)}%`).join(" ")}`)
 console.log(`time in state: ${fmt(agg.states, (v) => ((100 * v) / totalT).toFixed(1) + "%")}`)

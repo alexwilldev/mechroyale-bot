@@ -3,6 +3,7 @@
 Full plan: `~/.claude/plans/create-a-plan-to-vast-sifakis.md`. Cutoff **Sun 11:00 AM ET**.
 
 ## Current phase
+LIVE REAL-ENGINE TESTING (Sat ~15:00): `bun sim/live.ts --n 4 --tag X --set k=v` plays private FFA rooms on play.joinbuilders.org (user approved). Real house bots, real engine; ~1.5-3 min/match. Use for FFA (final) decisions; practice board for practice.
 SIM RECALIBRATED (Sat ~14:00): house bots now WAKE (join hunt) when shot or within wakeR; calibrated args `--aim 1.6 --wakeR 40` reproduce real gaps (b31-b20 = +0.52 sim vs +0.5 real; b32<b31 both). Sim level ~0.6 below real. Variant sweep on b31: nothing beats it beyond noise; FFA h2h b31 ~= aggressive. Use these args for all future sim tests.
 COMPETITOR STUDY (Sat ~13:00): 238 public Mech Royale repos; teams stating 5.1-5.8 converge on: selective fights (~60 m engage, don't wake idle house bots), heal to ~95% before re-engaging, escape when 2 enemies hit us, laser timing/partial lethal shots, uncontested drops. Ideas only, no code copied.
 RE-FROZEN (Sat ~12:30): structural batches 24-26 gave no real gain (3.71). Best board 4.17; 32nd place 5.33 -> cannot qualify. Main = batch 20 behaviour.
@@ -78,7 +79,8 @@ Noise: the same build varies about ±0.3 between runs (2.38 vs 2.71), so single-
 | 4e2a7d3 | Batch 31: 27 + selective fights (60 m / attackers / <30% hp) - from top public repos | REAL 4.52 BEST (98th) |
 | 5b01421 | Batch 32: 31 + heal-to-full | REAL 4.40 |
 | 85b7a04 | main = batch 31 behaviour | - |
-| (next) | Batch 33: 31 + giddy-style wide engage (approaching<180, weak<40%@160, aiming-at-us@190), fight boost >40 energy (practice only), lethal partial laser, lock 200 | ? |
+| c6193f0 | Batch 33: 31 + giddy-style wide engage, fight boost >40 (practice only), lethal partial laser, lock 200 | practice ? ; LIVE FFA 8.75 pts/match (b31: 11.75) |
+| (next) | Batch 34: 33 in practice, batch 31 behaviour once FFA detected (ffaOverrides) | ? |
 Qualifying tip: only the best practice score counts and runs vary +-0.3, so resubmitting the best build (2e74457) can draw a higher score.
 
 Baseline to beat: 1.15.

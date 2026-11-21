@@ -13,7 +13,7 @@ export const P = {
   pickupDetour: 160, // m: walk to wanted weapon pickups this close when no threat
   targetDistW: 4,
   ffaDeaths: 2, // unexplained deaths before we decide it's a free-for-all
-  ffaOverrides: {} as Record<string, number>, // sim FFA h2h of engageRange=60 was +0.7, -0.84, 0.0 on 3 seed sets: no reliable edge, so no switch
+  ffaOverrides: { wideEngage: false, lethalLaser: false, lockBonus: 150 } as Record<string, unknown>, // LIVE FFA (real engine, 8 each): batch 31 11.75 pts vs batch 33 8.75 -> play batch 31 once FFA is detected
   engageRange: 60, // top teams (5.1+): only fight mechs within ~60 m, attackers, or nearly dead ones (don't wake idle house bots)
   finishHp: 0.3, // also engage any visible mech below this hp fraction
   wideEngage: true, // batch 33 (giddy-style): also engage approaching / weak-in-range / aiming-at-us mechs

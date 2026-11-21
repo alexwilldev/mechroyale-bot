@@ -3,6 +3,7 @@
 Full plan: `~/.claude/plans/create-a-plan-to-vast-sifakis.md`. Cutoff **Sun 11:00 AM ET**.
 
 ## Current phase
+SIM RECALIBRATED (Sat ~14:00): house bots now WAKE (join hunt) when shot or within wakeR; calibrated args `--aim 1.6 --wakeR 40` reproduce real gaps (b31-b20 = +0.52 sim vs +0.5 real; b32<b31 both). Sim level ~0.6 below real. Variant sweep on b31: nothing beats it beyond noise; FFA h2h b31 ~= aggressive. Use these args for all future sim tests.
 COMPETITOR STUDY (Sat ~13:00): 238 public Mech Royale repos; teams stating 5.1-5.8 converge on: selective fights (~60 m engage, don't wake idle house bots), heal to ~95% before re-engaging, escape when 2 enemies hit us, laser timing/partial lethal shots, uncontested drops. Ideas only, no code copied.
 RE-FROZEN (Sat ~12:30): structural batches 24-26 gave no real gain (3.71). Best board 4.17; 32nd place 5.33 -> cannot qualify. Main = batch 20 behaviour.
 PREVIOUSLY UNFROZEN (Sat 11:00, user: continue iterating): structural ideas, one per batch: 24 isolate, 25 laser peek, 26 first strike from footsteps, 27 early drop grab.
@@ -74,8 +75,9 @@ Noise: the same build varies about ±0.3 between runs (2.38 vs 2.71), so single-
 | 8e76d0e | Batch 28: 27 + silent walk ON | REAL 3.58 (silence hurts) |
 | 94063ac | Batch 29: 28 + doubled predator bonuses | REAL 3.54 (confounded by silence) |
 | 90dfa02 | Batch 30: 27 + doubled predator bonuses, silent OFF | REAL 3.83 |
-| (next) | Batch 31: 27 + selective fights (60 m / attackers / <30% hp) - from top public repos | ? |
-| (next) | Batch 32: 31 + heal-to-full (stop fights <55%, resume at 95%; retreat 55%) | ? |
+| 4e2a7d3 | Batch 31: 27 + selective fights (60 m / attackers / <30% hp) - from top public repos | REAL 4.52 BEST (98th) |
+| 5b01421 | Batch 32: 31 + heal-to-full | REAL 4.40 |
+| (HEAD) | main = batch 31 behaviour (blank-commit resubmit = best) | - |
 Qualifying tip: only the best practice score counts and runs vary +-0.3, so resubmitting the best build (2e74457) can draw a higher score.
 
 Baseline to beat: 1.15.

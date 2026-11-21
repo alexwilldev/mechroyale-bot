@@ -30,7 +30,7 @@ const t0 = performance.now()
 for (let k = 0; k < N; k++) {
   Math.random = rng(SEED * 7919 + k * 104729) // reproducible bot randomness
   const nOurs = MODE === "ffa" ? Number(args.ours ?? 4) : 1
-  const m = new Match({ seed: SEED * 1000 + k, mode: MODE, bots: [...Array.from({ length: nOurs }, () => (h: any) => new Turtle(h)), ...Array.from({ length: nB }, () => (h: any) => new Turtle(h, overB))], huntersAtStart: Number(args.hunters ?? 1), allHuntT: Number(args.allHunt ?? 300), trace: !!args.svg && k === 0, idleEngage: Number(args.idle ?? 45), aimMul: Number(args.aim ?? 1), startWeapon: args.start || undefined })
+  const m = new Match({ seed: SEED * 1000 + k, mode: MODE, bots: [...Array.from({ length: nOurs }, () => (h: any) => new Turtle(h)), ...Array.from({ length: nB }, () => (h: any) => new Turtle(h, overB))], huntersAtStart: Number(args.hunters ?? 1), allHuntT: Number(args.allHunt ?? 300), trace: !!args.svg && k === 0, idleEngage: Number(args.idle ?? 45), aimMul: Number(args.aim ?? 1), startWeapon: args.start || undefined, wake: args.wake !== "0", wakeR: Number(args.wakeR ?? 60) })
   m.run()
   Math.random = realRandom
   if (k === 0) traced = m

@@ -16,7 +16,7 @@ export const P = {
   ffaOverrides: {} as Record<string, number>, // sim FFA h2h of engageRange=60 was +0.7, -0.84, 0.0 on 3 seed sets: no reliable edge, so no switch
   engageRange: 60, // top teams (5.1+): only fight mechs within ~60 m, attackers, or nearly dead ones (don't wake idle house bots)
   finishHp: 0.3, // also engage any visible mech below this hp fraction
-  healStart: 0.55, // batch 32: heal-to-full (LanceHuang245 5.27: retreat 55%, re-engage 95%)
+  healStart: 0, // heal-to-full: REAL batch 32 4.40 < batch 31 4.52; calibrated sim -0.23 -> off
   healUntil: 0.95, // ...until back above this
   laserMemory: 60, // s to remember a laser pickup we saw
   laserDetour: 250,
@@ -38,7 +38,7 @@ export const P = {
   attackerBonus: 250, // target bonus for whoever damaged us in the last 3 s
   rearBonus: 0, // extra target bonus for whoever hit us in the back in the last 2 s
   spreadBackoff: 0, // move away from the enemy centroid when they spread >90° around us (0 = off) // target score bonus for staying on the current target (finish kills before they regen) // target score: hp + dist * this (lower = preferred)
-  retreatHp: 0.55, // break line of sight below this hp fraction when the enemy has more hp
+  retreatHp: 0.35, // break line of sight below this hp fraction when the enemy has more hp
   gunRange: 90, // batch 20
   laserRange: 110, // REAL best (batch 20: 4.13). 255->3.42 230->3.79 150->3.85/3.60 80->3.69 50->4.04
   lightningRange: 130, // REAL batch 23 (lightning on) 3.65 < batch 20: keep it off

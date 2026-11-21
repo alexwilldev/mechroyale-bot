@@ -72,6 +72,7 @@ export class Mech {
   kills = 0
   shortUntil = 0
   tier?: Tier
+  woken = false // idle house bot that was shot or approached: joins the hunt for good
   route: { pts: number[][]; t: number; goal: V3 } | null = null
   strafeSign = 1
   strafeT = 0
@@ -100,7 +101,7 @@ export class Mech {
   }
 }
 
-export type MatchOpts = { seed: number; mode: "practice" | "ffa"; bots: ((h: any) => any)[]; huntersAtStart?: number; allHuntT?: number; trace?: boolean; idleEngage?: number; aimMul?: number; startWeapon?: string }
+export type MatchOpts = { seed: number; mode: "practice" | "ffa"; bots: ((h: any) => any)[]; huntersAtStart?: number; allHuntT?: number; trace?: boolean; idleEngage?: number; aimMul?: number; startWeapon?: string; wake?: boolean; wakeR?: number }
 
 export class Match {
   t = 0
@@ -220,6 +221,7 @@ export class Match {
     target.dmgT = this.t
     const key = weapon + (rear ? "(rear)" : "")
     target.log.dmgIn[key] = (target.log.dmgIn[key] ?? 0) + dmg
+    if (src && src.team !== target.team && target.team === 1 && this.o.wake) target.woken = true
     if (src && src !== target) {
       src.dmgT = this.t
       src.log.dmgOut += dmg
@@ -422,7 +424,8 @@ export class Match {
     if (this.o.mode === "practice") {
       const order = this.mechs.filter((o) => o.team === 1 && o.alive)
       const n = this.t >= (this.o.allHuntT ?? 300) ? 99 : (this.o.huntersAtStart ?? 1) + this.deadHouse
-      hunting = order.indexOf(m) < n
+      hunting = order.indexOf(m) < n || m.woken
+      if (!hunting && this.o.wake && enemies.some((e) => hd(e.pos, m.pos) < (this.o.wakeR ?? 60))) (m.woken = true), (hunting = true)
     }
     const tier = m.tier!
     const a: any = { move: [0, 0], fire: [false, false], boost: false }

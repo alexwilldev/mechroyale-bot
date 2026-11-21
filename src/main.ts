@@ -338,7 +338,8 @@ export class Turtle {
           this.strafeUntil = t + P.strafeFlip * (0.6 + Math.random() * 0.8)
         }
         // hold our weapon's best range: close in with lightning, keep gun/laser distance otherwise
-        const want = lightning && me.energy > 25 ? P.lightningRange : P.gunRange
+        // laser outranges everything and can't miss: fight from far so their bullets have time to miss us
+        const want = lightning && me.energy > 25 ? P.lightningRange : laser ? P.laserRange : P.gunRange
         const radial = Math.max(-1, Math.min(1, (d - want) / (want * 0.5)))
         const py = ty0 + (this.strafeSign * Math.PI) / 2
         mv = [mv[0] * 0.4 + Math.cos(py) + radial * Math.cos(ty0), mv[1] * 0.4 + Math.sin(py) + radial * Math.sin(ty0)]

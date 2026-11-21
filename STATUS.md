@@ -39,7 +39,8 @@ Noise: the same build varies about ±0.3 between runs (2.38 vs 2.71), so single-
 | 2cecc16 | Batch 8: reload when no clear shot and mag < 50% | 3.35 (25th), scorer showed 69 ms wait |
 | c2eac49 | Batch 9: 12 ms soft per-tick budget, cover cached 0.5 s, A* cap 5k | 3.73 (21st; leader 5.19), wait 0 ms |
 | 5c0d497 | Batch 10: cube farming until 8 cubes or 230 s (roam, crates 110 m, drones 120 m, cubes 120 m) | 3.56 (23rd), wait 83 ms |
-| (next) | Batch 11: batch 10 + hard 20 ms deadline inside A*/cover/hold searches, soft budget 8 ms (sandbox max 3.6 ms) | ? |
+| a0313b7 | Batch 11: batch 10 + hard 20 ms deadline inside searches, soft budget 8 ms | 3.17, wait 73 ms |
+| (next) | Batch 12: farming OFF (batch 9 ranges) + batch 11 deadlines | ? |
 
 Baseline to beat: 1.15.
 

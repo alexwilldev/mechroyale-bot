@@ -9,17 +9,17 @@ export const P = {
   ],
   // Weapon preference for the second slot (higher = better).
   weaponScore: { laser: 3, lightning: 2, mortar: 1, gun: 0 } as Record<string, number>,
-  lootDetour: 120, // m: walk to visible cubes this close when no threat
+  lootDetour: 80, // m: walk to visible cubes this close when no threat
   pickupDetour: 160, // m: walk to wanted weapon pickups this close when no threat
   targetDistW: 4, // target score: hp + dist * this (lower = preferred)
   retreatHp: 0.35, // break line of sight below this hp fraction when the enemy has more hp
   gunRange: 65, // m: preferred fighting distance with gun/laser
   lightningRange: 28, // m: preferred distance when lightning is charged up
-  farmCubes: 8, // keep roaming for crates/drones/cubes until we hold this many cubes
+  farmCubes: 0, // keep roaming for crates/drones/cubes until we hold this many cubes
   farmUntilT: 230, // ...or until this time
-  npcRange: 120, // m: engage NPC drones this close (when healthy)
+  npcRange: 80, // m: engage NPC drones this close (when healthy)
   roamUntilT: 100, // s: roam for loot until then (or while slot 1 is empty)
-  crateShootRange: 110, // m: shoot crates when no threat
+  crateShootRange: 70, // m: shoot crates when no threat
   zoneSafety: 0.75, // stay within this fraction of the next radius from next_center
   strafeFlip: 1.4, // s between strafe direction changes
   threatMemory: 4, // s to keep facing the last damage bearing

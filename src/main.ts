@@ -241,7 +241,7 @@ export class Turtle {
       // only pick fights with drones when healthy; always answer one that is shooting us
       const healthy = me.hp / me.max_hp >= P.npcHuntHp
       const npcNear = healthy
-        ? npcs.filter((n) => hdist(n.pos, pos) < 80).sort((a, b) => hdist(a.pos, pos) - hdist(b.pos, pos))[0]
+        ? npcs.filter((n) => hdist(n.pos, pos) < P.npcRange).sort((a, b) => hdist(a.pos, pos) - hdist(b.pos, pos))[0]
         : undefined
       target = npcAttacker ?? npcNear ?? null
     }
@@ -291,7 +291,7 @@ export class Turtle {
       if (loot) {
         goal = loot.pos
         state = "loot"
-      } else if (!me.weapons[1] || t < P.roamUntilT) {
+      } else if (!me.weapons[1] || t < P.roamUntilT || (me.cubes < P.farmCubes && t < P.farmUntilT)) {
         // roam inside the safe area to find weapons and crates
         if (!this.roam || t > this.roamUntil || hdist(pos, this.roam) < 8) {
           const a = Math.random() * TAU, r = Math.sqrt(Math.random()) * z.next_radius * 0.6

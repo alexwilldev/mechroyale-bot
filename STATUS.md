@@ -37,7 +37,8 @@ Noise: the same build varies about ±0.3 between runs (2.38 vs 2.71), so single-
 | 496d0d5 | Batch 6: idle -> wait at a covered spot (fewest open sight lines) inside the safe circle | ? |
 | ad00bb3 | Batch 7: only start NPC-drone fights above 65% hp | ? |
 | 2cecc16 | Batch 8: reload when no clear shot and mag < 50% | 3.35 (25th), scorer showed 69 ms wait |
-| (next) | Batch 9: 12 ms soft per-tick budget (skip replans/cover/hold searches when late), cover cached 0.5 s, A* cap 5k | ? |
+| c2eac49 | Batch 9: 12 ms soft per-tick budget, cover cached 0.5 s, A* cap 5k | 3.73 (21st; leader 5.19), wait 0 ms |
+| (next) | Batch 10: cube farming until 8 cubes or 230 s (roam, crates 110 m, drones 120 m, cubes 120 m) | ? |
 
 Baseline to beat: 1.15.
 

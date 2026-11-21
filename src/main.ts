@@ -53,6 +53,7 @@ export class Turtle {
   maxMs = 0
   lastTarget = -1
   lastPlanT = -99
+  lastStep = { t: -99, bearing: 0 }
   peekPos: V3 | null = null
   peekCover: V3 | null = null
   peekCoverT = -99
@@ -298,6 +299,7 @@ export class Turtle {
       if (s.kind === "drop" || s.kind === "crate" || s.kind === "npc_gun" || s.dist === "far" || s.age > 0.6) continue
       const pri = s.kind === "step" || s.kind === "boost" || s.kind === "jet" || s.kind === "laser_charge" ? 3 : s.dist === "near" ? 2 : 1
       if (pri > bestPri) (bestPri = pri), (this.lastSound = { t, bearing: s.bearing })
+      if (s.kind === "step" || s.kind === "boost" || s.kind === "jet") this.lastStep = { t, bearing: s.bearing }
     }
 
     if (obs.offer) {
@@ -698,6 +700,21 @@ export class Turtle {
       else if (n > 0.3) yaw = Math.atan2(mv[1], mv[0]) + Math.sin(t * 1.7) * 0.9 // sweep while walking
       else yaw = this.scanYaw += 0.12
       act.aim = [yaw, 0]
+    }
+
+    // --- first strike: an unseen mech is moving nearby -> pre-charge the laser so the first shot is full power ---
+    if (this.p.preCharge && !aimSet) {
+      const li = me.weapons.findIndex((w) => w?.kind === "laser")
+      const lw = li >= 0 ? me.weapons[li]! : null
+      if (lw) {
+        const full = lw.stats.charge ?? 0.75, holdMax = full + (lw.stats.hold_s ?? 2) - 0.3
+        const heard = t - this.lastStep.t < 3
+        if (heard && lw.cooldown <= 0 && (lw.charge ?? 0) < holdMax) {
+          act.fire![li] = true
+          act.aim = [this.lastStep.bearing, 0]
+          state += "+precharge"
+        }
+      }
     }
 
     // --- loot pickup (take within reach) ---

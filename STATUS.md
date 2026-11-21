@@ -65,7 +65,8 @@ Noise: the same build varies about ±0.3 between runs (2.38 vs 2.71), so single-
 | 770bbea | Exp B: batch 20 + never retreat, recover <40% | REAL 3.83 (no gain) |
 | 13656bc (resubmit) | Batch 20 resubmit | REAL 4.17 (new best). 32nd place = 5.33 -> need +1.2 to qualify |
 | 998a1d0 | Batch 24: isolate - when 2+ enemies have LOS, cover from all but target (sim neutral) | ? |
-| (next) | Batch 25: 24 + laser peek (hide while charging/cooling, peek out to fire) (sim 4.17 vs 4.08) | ? |
+| 9ecf260 | Batch 25: 24 + laser peek (hide while charging/cooling, peek out to fire) (sim neutral) | ? |
+| (next) | Batch 26: 25 + laser pre-charge toward unseen footsteps (sim neutral) | ? |
 Qualifying tip: only the best practice score counts and runs vary +-0.3, so resubmitting the best build (2e74457) can draw a higher score.
 
 Baseline to beat: 1.15.

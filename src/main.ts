@@ -53,6 +53,8 @@ export class Turtle {
   maxMs = 0
   lastTarget = -1
   lastPlanT = -99
+  iso: V3 | null = null
+  isoT = -99
   rearBy = { id: -1, t: -99 }
   visited = new Set<string>()
   explore: V3 | null = null
@@ -215,6 +217,25 @@ export class Turtle {
       if (dist / speed > d.lands_in + this.p.dropLate) continue // someone nearer will have it by then
       if (dist < bd) (bd = dist), (best = { pos: d.pos, radius: d.radius ?? 8 })
     }
+    return best
+  }
+
+  /** Nearby walkable point hidden from every `others` threat, preferring spots that still see `target`. */
+  findIsolation(pos: V3, others: V3[], target: V3): V3 | null {
+    if (!this.map || !this.nav) return null
+    let best: V3 | null = null, bestCost = Infinity
+    for (const r of [8, 15, 24])
+      for (let k = 0; k < 12 && !this.late(this.p.hardBudgetMs); k++) {
+        const a = (k / 12) * TAU
+        const x = pos[0] + Math.cos(a) * r, y = pos[1] + Math.sin(a) * r
+        if (!this.nav.isFree(x, y) || !this.nav.lineFree(pos[0], pos[1], x, y)) continue
+        const zc = this.map.surfaceAt(x, y, pos[2] + 2)
+        const c = [x, y, zc + 4.5]
+        if (others.some((o) => this.map!.los([o[0], o[1], o[2] + 8], c))) continue
+        const seesTarget = this.map.los([x, y, zc + 7], [target[0], target[1], target[2] + 4.5])
+        const cost = r - (seesTarget ? 12 : 0)
+        if (cost < bestCost) (bestCost = cost), (best = [x, y, zc])
+      }
     return best
   }
 
@@ -436,7 +457,21 @@ export class Turtle {
       // reuse a recent cover point; search again at most every 0.5 s and only with time left this tick
       if (needCover && (t - this.coverT > 0.5 || !this.cover) && !this.late()) (this.cover = this.findCover(pos, target.pos)), (this.coverT = t)
       const cover = needCover ? this.cover : null
-      if (laserGoal && !losing && state !== "endgame") {
+      // more than one enemy has a line on us: slip behind cover from all but the current target (duel one at a time)
+      let iso: V3 | null = null
+      if (this.p.isolate && this.map && state !== "endgame") {
+        const others = mechs.filter(
+          (o) => o.id !== target.id && hdist(o.pos, pos) < 220 && this.map!.los([o.pos[0], o.pos[1], o.pos[2] + 8], [pos[0], pos[1], pos[2] + 4.5]),
+        )
+        if (others.length) {
+          if (t - this.isoT > 0.5 && !this.late()) (this.iso = this.findIsolation(pos, others.map((o) => o.pos), target.pos)), (this.isoT = t)
+          iso = this.iso
+        } else this.iso = null
+      }
+      if (iso) {
+        mv = this.steer(pos, iso, t)
+        state = "isolate"
+      } else if (laserGoal && !losing && state !== "endgame") {
         const g = this.steer(pos, laserGoal, t)
         const py = ty0 + (this.strafeSign * Math.PI) / 2
         mv = [g[0] + Math.cos(py) * 0.3, g[1] + Math.sin(py) * 0.3]

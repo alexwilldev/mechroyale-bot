@@ -3,7 +3,8 @@
 Full plan: `~/.claude/plans/create-a-plan-to-vast-sifakis.md`. Cutoff **Sun 11:00 AM ET**.
 
 ## Current phase
-FROZEN (Sat ~02:00, user's resources moved to other tracks). Real level ~3.9-4.0 vs leader 5.69. Main = batch 20 behaviour. Only action left: resubmit main for lucky practice draws (top-32 qualifying).
+UNFROZEN (Sat 11:00, user: continue iterating): structural ideas, one per batch: 24 isolate, 25 laser peek, 26 first strike from footsteps, 27 early drop grab.
+WAS FROZEN (Sat ~02:00, user's resources moved to other tracks). Real level ~3.9-4.0 vs leader 5.69. Main = batch 20 behaviour. Only action left: resubmit main for lucky practice draws (top-32 qualifying).
 SIMULATOR BUILT (sim/sim.ts + sim/run.ts). Calibrated: old build scores ~3.4 in sim vs ~3.5 real. Usage:
 `bun sim/run.ts --n 100 --seed 5 [--set key=val,...] [--start laser] [--svg /tmp/x.svg]` (100 matches ~25 s).
 Rear-damage round: rearBonus/attackerBonus/spreadBackoff all within noise (not used). laserRange 255 +0.15 consistent.
@@ -62,7 +63,8 @@ Noise: the same build varies about ±0.3 between runs (2.38 vs 2.71), so single-
 | 2e74457 (resubmit) | Batch 20 again | REAL 3.88 (true level ~4.0) |
 | 9c746d3 | Exp A: batch 20 + defensive upgrade order | REAL 4.04 (no gain) |
 | 770bbea | Exp B: batch 20 + never retreat, recover <40% | REAL 3.83 (no gain) |
-| (HEAD) | FROZEN: batch 20 behaviour on main; submit with blank commit field for lucky resubmits | - |
+| 13656bc (resubmit) | Batch 20 resubmit | REAL 4.17 (new best). 32nd place = 5.33 -> need +1.2 to qualify |
+| (next) | Batch 24: isolate - when 2+ enemies have LOS, cover from all but target (sim neutral 4.08 vs 4.17) | ? |
 Qualifying tip: only the best practice score counts and runs vary +-0.3, so resubmitting the best build (2e74457) can draw a higher score.
 
 Baseline to beat: 1.15.

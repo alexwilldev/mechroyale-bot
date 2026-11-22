@@ -14,6 +14,8 @@ export const P = {
   targetDistW: 4,
   ffaDeaths: 2, // unexplained deaths before we decide it's a free-for-all
   ffaOverrides: {} as Record<string, number>, // sim FFA h2h of engageRange=60 was +0.7, -0.84, 0.0 on 3 seed sets: no reliable edge, so no switch
+  trackAwake: true, // practice: focus hunters already awake, leave idle house bots alone
+  awakeIdleKill: 0.35, // hp fraction: finish idle mechs within engageRange
   engageRange: 60, // top teams (5.1+): only fight mechs within ~60 m, attackers, or nearly dead ones (don't wake idle house bots)
   oddsW: { b0: 1.778, lhp: 1.775, cubes: -0.657, weap: 1.162, others: -0.653, dist: 0.078, back: -0.133 }, // own fit, sim/fights.ts (903 fights, 82% acc)
   oddsEngage: 0, // practice: start fights with predicted win prob >= this (0 = off). sim: 0.7/0.8/0.9 all -0.2..-0.4 (wakes more bots)

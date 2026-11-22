@@ -46,6 +46,8 @@ export class Turtle {
   scanYaw = 0
   prevAlive = 16
   ffa = false
+  awake = new Map<number, { awake: boolean; since: number; seen: number }>()
+  awakeT = -1
   kills = 0
   map: GameMap | null = null
   nav: Nav | null = null
@@ -414,17 +416,44 @@ export class Turtle {
       }
     }
 
+    const trackAwake = this.p.trackAwake && !this.ffa
+    if (trackAwake) {
+      for (const e of obs.events) {
+        const id = e.type === "damaged" ? e.by : e.type === "hit" ? e.target : null
+        if (id != null && id >= 0 && id < 16) this.awake.set(id, { awake: true, since: -1, seen: t })
+      }
+      for (const m of obs.mechs) {
+        if (m.kind !== "mech") continue
+        const a = this.awake.get(m.id) ?? { awake: false, since: -1, seen: -1 }
+        if (a.awake) continue
+        const d = hdist(m.pos, pos)
+        const closing = d > 0 && d <= 180 && (m.vel[0] * (pos[0] - m.pos[0]) + m.vel[1] * (pos[1] - m.pos[1])) / d > 1
+        if (!closing) a.since = -1
+        else {
+          if (a.since < 0 || a.seen !== this.awakeT) a.since = t
+          if (t - a.since >= 3) a.awake = true
+        }
+        a.seen = t
+        this.awake.set(m.id, a)
+      }
+      this.awakeT = t
+    }
+
     // --- target selection ---
     // engage only mechs within engageRange, plus anyone who shot us recently (FFA survival lever)
     const mechs = obs.mechs.filter(
       (m) =>
         m.kind === "mech" &&
-        ((m.id === this.lastDamage.by && t - this.lastDamage.t < 6) || // anyone shooting us
+        (trackAwake
+          ? (this.awake.get(m.id)?.awake ||
+              (hdist(m.pos, pos) <= this.p.engageRange &&
+                ((m.hp ?? 1e9) < this.p.awakeIdleKill * (m.max_hp ?? 1400) || hdist(m.pos, pos) <= 25)))
+          : ((m.id === this.lastDamage.by && t - this.lastDamage.t < 6) || // anyone shooting us
           (!this.healing &&
             (hdist(m.pos, pos) <= this.p.engageRange ||
               (m.hp ?? 1e9) < this.p.finishHp * (m.max_hp ?? 1400) ||
               this.wantsFight(m, pos) ||
-              this.goodOdds(m, obs)))), // close, nearly dead, approaching, weak-in-range, aiming at us, or a fight we expect to win
+              this.goodOdds(m, obs))))), // close, nearly dead, approaching, weak-in-range, aiming at us, or a fight we expect to win
     )
     const npcs = obs.mechs.filter((m) => m.kind === "npc")
     let target: ActorObs | null = null
@@ -437,6 +466,7 @@ export class Turtle {
         (m.id === this.lastDamage.by && t - this.lastDamage.t < 3 ? this.p.attackerBonus : 0) -
         (m.id === this.rearBy.id && t - this.rearBy.t < 2 ? this.p.rearBonus : 0) -
         (m.id === this.lastTarget ? this.p.lockBonus : 0) -
+        (trackAwake && this.awake.get(m.id)?.awake ? 300 : 0) -
         this.predatorBonus(m, me, pos, obs) +
         (this.clear(eyeP, [m.pos[0], m.pos[1], m.pos[2] + 4.5]) ? 0 : 900)
       target = mechs.reduce((a, b) => (score(a) <= score(b) ? a : b))

@@ -52,6 +52,7 @@ export class Turtle {
   route: { goal: V3; pts: number[][]; t: number } | null = null
   maxMs = 0
   lastTarget = -1
+  loseAt = -1
   lastPlanT = -99
   healing = false
   drones = new Map<number, { pos: V3; t: number }>()
@@ -437,6 +438,8 @@ export class Turtle {
         (m.id === this.lastDamage.by && t - this.lastDamage.t < 3 ? this.p.attackerBonus : 0) -
         (m.id === this.rearBy.id && t - this.rearBy.t < 2 ? this.p.rearBonus : 0) -
         (m.id === this.lastTarget ? this.p.lockBonus : 0) -
+        ((m.hp ?? 1400) <= 0.3 * (m.max_hp ?? 1400) ? this.p.lowBonus : 0) +
+        (this.p.maxTarget > 0 && hdist(m.pos, pos) > this.p.maxTarget ? 5000 : 0) -
         this.predatorBonus(m, me, pos, obs) +
         (this.clear(eyeP, [m.pos[0], m.pos[1], m.pos[2] + 4.5]) ? 0 : 900)
       target = mechs.reduce((a, b) => (score(a) <= score(b) ? a : b))
@@ -551,9 +554,18 @@ export class Turtle {
       const gunDown = !gun || (gun.reload ?? 0) > 0 || (gun.ammo ?? 1) === 0
       const otherReady =
         (laser && laser.cooldown <= 0.2) || (lightning && d < lightning.stats.range && me.energy > this.p.lightningEnergyFloor)
-      const losing =
+      let losing =
         (me.hp / me.max_hp < this.p.retreatHp && (target.hp ?? 1400) > me.hp * 1.1) ||
         (this.p.oddsFlee > 0 && !this.ffa && (target.hp ?? 1e9) > this.p.finishHp * (target.max_hp ?? 1400) && this.fightOdds(target, obs) < this.p.oddsFlee)
+      if (this.p.loseRule && !this.ffa) {
+        // pulse rule: outnumbered and hurt -> break off for a short pulse, then re-check (finish nearly dead targets)
+        const hf = me.hp / me.max_hp, tf = (target.hp ?? 1400) / (target.max_hp ?? 1400)
+        const near = obs.mechs.filter((m) => m.kind === "mech" && hdist(m.pos, pos) < 160).length
+        let bad = (near >= 2 && hf < 0.55) || (near >= 3 && hf < 0.8) || (hf < 0.35 && tf > hf + 0.1)
+        if (tf < 0.25 && hf > 0.2 && near <= 2) bad = false
+        if (bad) this.loseAt = t
+        losing = this.loseAt >= 0 && t - this.loseAt < this.p.losePulse
+      }
       const needCover = (gunDown && !otherReady) || losing
       // reuse a recent cover point; search again at most every 0.5 s and only with time left this tick
       if (needCover && (t - this.coverT > 0.5 || !this.cover) && !this.late()) (this.cover = this.findCover(pos, target.pos)), (this.coverT = t)
@@ -626,6 +638,16 @@ export class Turtle {
           }
         }
         state = state === "endgame" ? "endgame-fight" : "fight"
+        if (this.p.fightLoot > 0 && state === "fight") {
+          // grab a nearby cube mid-fight (+hp, +damage) instead of strafing in place
+          let r = this.p.fightLoot * (me.hp / me.max_hp <= 0.5 ? 0.57 : 1)
+          let cube: V3 | null = null
+          for (const c of obs.cubes) {
+            const dc = hdist(c.pos, pos)
+            if (dc < r) (r = dc), (cube = c.pos)
+          }
+          if (cube) (mv = this.steer(pos, cube, t)), (state = "fight-cube")
+        }
       }
     }
 
@@ -787,7 +809,13 @@ export class Turtle {
           // lethal laser: release a partial charge as soon as it is enough to kill
           const lc = w.charge ?? 0, lf = w.stats.charge ?? 0.75, mf = w.stats.min_frac ?? 0.35
           const ldmg = (w.stats.damage ?? 315) * (mf + (1 - mf) * Math.min(1, lc / lf)) * (1 + 0.04 * Math.min(me.cubes, 10))
-          const lethal = this.p.lethalLaser && lAligned && lc >= (w.stats.min_charge ?? 0.15) && target.hp != null && ldmg >= target.hp
+          const lmul =
+            this.p.lethalK === 1
+              ? 1
+              : this.p.lethalK *
+                ((target.weapons ?? []).includes("mortar") ? 1.6 : 1) *
+                (Math.abs(wrap(target.aim[0] - yawTo(target.pos, pos))) > Math.PI / 2 ? 1.5 : 1)
+          const lethal = this.p.lethalLaser && lAligned && lc >= (w.stats.min_charge ?? 0.15) && target.hp != null && ldmg * lmul >= target.hp
           if (lethal) state += "+lethal"
           else this.laser(act, i, w, lAligned, d)
           if (lethal) act.aim = [ly, lpitch]

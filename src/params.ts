@@ -82,4 +82,18 @@ export const P = {
   fightBoostOn: 80, // start boost-strafing in fights above this energy
   fightBoostOff: 45, // stop below this (keeps a reserve for dodges) // keep this much energy before boosting to dodge
   endgameRadius: 70, // once the next circle is this small, stand on next_center exactly
+  // --- Sun batch: ideas from the top-board practice play (public MIT bot by giddygiddyboy), re-implemented here ---
+  wideEngage: false, // also fight mechs that are weak, aiming at us, or closing on us (see wantsFight)
+  weakFrac: 0.4,
+  weakRange: 160,
+  aimRange: 190,
+  aimTol: 0.22,
+  approachRange: 180,
+  approachSpeed: 3,
+  loseRule: false, // practice: retreat in 1.5 s pulses while a 'losing' pattern holds (outnumbered and hurt)
+  losePulse: 1.5,
+  fightLoot: 0, // m: mid-fight, step onto a cube this close (x0.57 below half hp)
+  lowBonus: 0, // target score bonus for enemies at <= 30% hp
+  lethalK: 1, // lethal laser: release when this fraction of the partial-charge damage (incl. rear x1.5 / mortar cook-off) kills
+  maxTarget: 0, // m: ignore targets farther than this (0 = off)
 }

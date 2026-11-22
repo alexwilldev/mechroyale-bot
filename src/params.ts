@@ -13,13 +13,13 @@ export const P = {
   pickupDetour: 160, // m: walk to wanted weapon pickups this close when no threat
   targetDistW: 4,
   ffaDeaths: 2, // unexplained deaths before we decide it's a free-for-all
-  ffaOverrides: {} as Record<string, number>, // sim FFA h2h of engageRange=60 was +0.7, -0.84, 0.0 on 3 seed sets: no reliable edge, so no switch
+  ffaOverrides: { fightLoot: 0, lowBonus: 0, lockBonus: 150, lethalK: 1, lethalLaser: 0, laserRange: 110, wideEngage: 0 } as Record<string, number>, // sim FFA h2h of engageRange=60 was +0.7, -0.84, 0.0 on 3 seed sets: no reliable edge, so no switch
   engageRange: 60, // top teams (5.1+): only fight mechs within ~60 m, attackers, or nearly dead ones (don't wake idle house bots)
   oddsW: { b0: 1.778, lhp: 1.775, cubes: -0.657, weap: 1.162, others: -0.653, dist: 0.078, back: -0.133 }, // own fit, sim/fights.ts (903 fights, 82% acc)
   oddsEngage: 0, // practice: start fights with predicted win prob >= this (0 = off). sim: 0.7/0.8/0.9 all -0.2..-0.4 (wakes more bots)
   oddsRange: 160, // ...within this range
   oddsFlee: 0, // REAL batch 35 (flee <0.45) 4.19 < batch 31 4.52 -> off
-  lethalLaser: false, // release a partial laser charge when it already kills
+  lethalLaser: true, // release a partial laser charge when it already kills
   finishHp: 0.3, // also engage any visible mech below this hp fraction
   healStart: 0, // heal-to-full: stop picking fights below this hp fraction (0 = off)
   healUntil: 0.95, // ...until back above this
@@ -39,7 +39,7 @@ export const P = {
   preCharge: false, // batch 26 idea (real: no gain)
   laserPeek: false, // batch 25 idea (real: no gain)
   isolate: false, // batch 24 idea (real: no gain)
-  lockBonus: 150,
+  lockBonus: 800,
   attackerBonus: 250, // target bonus for whoever damaged us in the last 3 s
   rearBonus: 0, // extra target bonus for whoever hit us in the back in the last 2 s
   spreadBackoff: 0, // move away from the enemy centroid when they spread >90° around us (0 = off) // target score bonus for staying on the current target (finish kills before they regen) // target score: hp + dist * this (lower = preferred)
@@ -93,7 +93,7 @@ export const P = {
   loseRule: false, // practice: retreat in 1.5 s pulses while a 'losing' pattern holds (outnumbered and hurt)
   losePulse: 1.5,
   fightLoot: 0, // m: mid-fight, step onto a cube this close (x0.57 below half hp)
-  lowBonus: 0, // target score bonus for enemies at <= 30% hp
-  lethalK: 1, // lethal laser: release when this fraction of the partial-charge damage (incl. rear x1.5 / mortar cook-off) kills
+  lowBonus: 800, // target score bonus for enemies at <= 30% hp
+  lethalK: 0.7, // lethal laser: release when this fraction of the partial-charge damage (incl. rear x1.5 / mortar cook-off) kills
   maxTarget: 0, // m: ignore targets farther than this (0 = off)
 }

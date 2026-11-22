@@ -13,7 +13,7 @@ export const P = {
   pickupDetour: 160, // m: walk to wanted weapon pickups this close when no threat
   targetDistW: 4,
   ffaDeaths: 2, // unexplained deaths before we decide it's a free-for-all
-  ffaOverrides: { laserDetour: 250, laserMemory: 60 } as Record<string, unknown>, // c08: batch 31 values restored once a free-for-all is detected
+  ffaOverrides: { retreatHp: 0.35 } as Record<string, unknown>, // c09: batch 31 values restored once a free-for-all is detected
   engageRange: 60, // top teams (5.1+): only fight mechs within ~60 m, attackers, or nearly dead ones (don't wake idle house bots)
   oddsW: { b0: 1.778, lhp: 1.775, cubes: -0.657, weap: 1.162, others: -0.653, dist: 0.078, back: -0.133 }, // own fit, sim/fights.ts (903 fights, 82% acc)
   oddsEngage: 0, // practice: start fights with predicted win prob >= this (0 = off). sim: 0.7/0.8/0.9 all -0.2..-0.4 (wakes more bots)
@@ -23,8 +23,8 @@ export const P = {
   finishHp: 0.3, // also engage any visible mech below this hp fraction
   healStart: 0, // heal-to-full: stop picking fights below this hp fraction (0 = off)
   healUntil: 0.95, // ...until back above this
-  laserMemory: 40, // s to remember a laser pickup we saw
-  laserDetour: 150,
+  laserMemory: 60, // s to remember a laser pickup we saw
+  laserDetour: 250,
   exploreUntil: 0, // s: explore for a laser until then (0 = off). sim: 200 -> -0.1, no gain
   laserDetourEarly: 400, // m: in the first minute, go further for a laser
   laserScanSpin: 0.35, // rad per decision to spin the torso while unarmed and idle (0 = off)
@@ -43,7 +43,7 @@ export const P = {
   attackerBonus: 250, // target bonus for whoever damaged us in the last 3 s
   rearBonus: 0, // extra target bonus for whoever hit us in the back in the last 2 s
   spreadBackoff: 0, // move away from the enemy centroid when they spread >90° around us (0 = off) // target score bonus for staying on the current target (finish kills before they regen) // target score: hp + dist * this (lower = preferred)
-  retreatHp: 0.35, // break line of sight below this hp fraction when the enemy has more hp
+  retreatHp: 0.25, // break line of sight below this hp fraction when the enemy has more hp
   gunRange: 90, // batch 20
   laserRange: 110, // REAL best (batch 20: 4.13). 255->3.42 230->3.79 150->3.85/3.60 80->3.69 50->4.04
   lightningRange: 130, // REAL batch 23 (lightning on) 3.65 < batch 20: keep it off

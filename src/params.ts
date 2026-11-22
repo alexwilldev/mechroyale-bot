@@ -13,13 +13,13 @@ export const P = {
   pickupDetour: 160, // m: walk to wanted weapon pickups this close when no threat
   targetDistW: 4,
   ffaDeaths: 2, // unexplained deaths before we decide it's a free-for-all
-  ffaOverrides: { engageRange: 60, finishHp: 0.3, lethalLaser: false } as Record<string, unknown>, // c01: batch 31 values restored once a free-for-all is detected
+  ffaOverrides: { engageRange: 60, finishHp: 0.3 } as Record<string, unknown>, // c02: batch 31 values restored once a free-for-all is detected
   engageRange: 45, // top teams (5.1+): only fight mechs within ~60 m, attackers, or nearly dead ones (don't wake idle house bots)
   oddsW: { b0: 1.778, lhp: 1.775, cubes: -0.657, weap: 1.162, others: -0.653, dist: 0.078, back: -0.133 }, // own fit, sim/fights.ts (903 fights, 82% acc)
   oddsEngage: 0, // practice: start fights with predicted win prob >= this (0 = off). sim: 0.7/0.8/0.9 all -0.2..-0.4 (wakes more bots)
   oddsRange: 160, // ...within this range
   oddsFlee: 0, // REAL batch 35 (flee <0.45) 4.19 < batch 31 4.52 -> off
-  lethalLaser: true, // release a partial laser charge when it already kills
+  lethalLaser: false, // release a partial laser charge when it already kills
   finishHp: 0.2, // also engage any visible mech below this hp fraction
   healStart: 0, // heal-to-full: stop picking fights below this hp fraction (0 = off)
   healUntil: 0.95, // ...until back above this

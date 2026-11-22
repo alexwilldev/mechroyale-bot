@@ -17,9 +17,12 @@ gave g1 4.67 (12 matches); the batch 31 baseline sits around 3.6–4.1.
 
 | # | Commit (full hash) | What it tests |
 | --- | --- | --- |
-| G1 | `fbdc8e2da8b9f4850cee10426c045d719ed51312` | everything: 1.5 s retreat pulses, mid-fight cubes, prefer low-HP and current target, lethal laser at 0.7, laser range 120, laser-first upgrades |
+| G6 | `dc7f5663f335aed2b557fa24b9bfe6217b00f84b` | G1 + close to 20 m on targets below 38% HP (when we're above 42%) |
+| G8 | `293f3a63fd33fc6592f5d3cf5959273b5d9dfc2f` | G6 + wider looting (detour 150 m, hunt drones down to 35% HP) |
+| G7 | `26c7c252daa9df6a1d658dd87c7736f9a517c3c6` | G1 + wider looting only |
+| G1 | `fbdc8e2da8b9f4850cee10426c045d719ed51312` | **REAL 5.01 (new best, Sun 9:14)**. Everything: 1.5 s retreat pulses, mid-fight cubes, prefer low-HP and current target, lethal laser at 0.7, laser range 120, laser-first upgrades |
 | G2 | `37f6e96e78187b9a35c723b24babb8fc9502bf55` | G1 + wider engagement (weak / aiming at us / closing) |
-| G3 | `cf5ceb47f003d8be57dbc82a301e80f50d33153b` | G1 without the retreat pulses |
+| G3 | `cf5ceb47f003d8be57dbc82a301e80f50d33153b` | **REAL 4.89.** G1 without the retreat pulses |
 | G4 | `59c192ed29b7f72e657c63d8351e55376113a33b` | target choice + lethal laser only |
 | G5 | `31027561de65df0b491aa53c0a301e0fd05d2e14` | retreat pulses + mid-fight cubes only |
 

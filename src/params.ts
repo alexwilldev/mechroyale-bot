@@ -11,9 +11,9 @@ export const P = {
   weaponScore: { laser: 3, mortar: 2, lightning: 1, gun: 0 } as Record<string, number>, // sim: laser +1.9 pts, mortar +0.3, lightning -0.2
   lootDetour: 80, // m: walk to visible cubes this close when no threat
   pickupDetour: 160, // m: walk to wanted weapon pickups this close when no threat
-  targetDistW: 6,
+  targetDistW: 4,
   ffaDeaths: 2, // unexplained deaths before we decide it's a free-for-all
-  ffaOverrides: { targetDistW: 4, lockBonus: 150, backstab: 300 } as Record<string, unknown>, // c05: batch 31 values restored once a free-for-all is detected
+  ffaOverrides: { endgameRadius: 70, holdSamples: 12, holdSearch: 45 } as Record<string, unknown>, // c06: batch 31 values restored once a free-for-all is detected
   engageRange: 60, // top teams (5.1+): only fight mechs within ~60 m, attackers, or nearly dead ones (don't wake idle house bots)
   oddsW: { b0: 1.778, lhp: 1.775, cubes: -0.657, weap: 1.162, others: -0.653, dist: 0.078, back: -0.133 }, // own fit, sim/fights.ts (903 fights, 82% acc)
   oddsEngage: 0, // practice: start fights with predicted win prob >= this (0 = off). sim: 0.7/0.8/0.9 all -0.2..-0.4 (wakes more bots)
@@ -31,7 +31,7 @@ export const P = {
   laserScanUntil: 150, // s // m: go fetch a remembered laser this far, even mid-fight
   silentWalk: false, // REAL: batches 28/29 with silent walk scored 3.58/3.54 vs 4.25 without -> keep off
   silentFrac: 0.4, // move magnitude cap for silent walking (0.4 x 11.7 = 4.7 m/s)
-  backstab: 200, // target bonus when the enemy faces away from us
+  backstab: 300, // target bonus when the enemy faces away from us
   counterBonus: 200, // target bonus for weapon counters (laser vs mortar carrier, lightning vs laser carrier)
   zoneVictim: 250, // target bonus for enemies standing outside the circle
   zoneHold: true, // never follow a target out of the circle
@@ -39,7 +39,7 @@ export const P = {
   preCharge: false, // batch 26 idea (real: no gain)
   laserPeek: false, // batch 25 idea (real: no gain)
   isolate: false, // batch 24 idea (real: no gain)
-  lockBonus: 200,
+  lockBonus: 150,
   attackerBonus: 250, // target bonus for whoever damaged us in the last 3 s
   rearBonus: 0, // extra target bonus for whoever hit us in the back in the last 2 s
   spreadBackoff: 0, // move away from the enemy centroid when they spread >90° around us (0 = off) // target score bonus for staying on the current target (finish kills before they regen) // target score: hp + dist * this (lower = preferred)
@@ -63,8 +63,8 @@ export const P = {
   softBudgetMs: 8, // past this many ms in a tick, skip optional work
   maxExpand: 5000, // A* expansion cap per plan (bounds worst-case tick time)
   laserLead: 0.1, // s: lead for hitscan laser (aim command latency)
-  holdSamples: 12, // candidate spots tried when picking a covered hold position
-  holdSearch: 45, // m: how far from current position to look for it
+  holdSamples: 20, // candidate spots tried when picking a covered hold position
+  holdSearch: 60, // m: how far from current position to look for it
   holdRay: 50, // m: sight-line length used to measure exposure
   dropRange: 170, // m: go for supply drops this close when no enemy is in sight
   dropLate: 12, // s: still go if we arrive at most this long after it lands
@@ -81,5 +81,5 @@ export const P = {
   climbTimeout: 5, // s: give up a climb (and blacklist that roof) after this
   fightBoostOn: 80, // start boost-strafing in fights above this energy
   fightBoostOff: 45, // stop below this (keeps a reserve for dodges) // keep this much energy before boosting to dodge
-  endgameRadius: 70, // once the next circle is this small, stand on next_center exactly
+  endgameRadius: 40, // once the next circle is this small, stand on next_center exactly
 }

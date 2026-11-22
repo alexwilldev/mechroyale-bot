@@ -12,6 +12,17 @@ Repo for every entry: https://github.com/alexwilldev/mechroyale-bot (paste the f
 Radius, Shopping and CAD have no better use for them. Each entry is batch 31 plus one idea, with batch 31's exact
 settings restored automatically once a free-for-all is detected.
 
+**Sunday batch (submit first):** the top board's practice ideas, written as our own code (b79a28c). The calibrated sim
+gave g1 4.67 (12 matches); the batch 31 baseline sits around 3.6–4.1.
+
+| # | Commit (full hash) | What it tests |
+| --- | --- | --- |
+| G1 | `fbdc8e2da8b9f4850cee10426c045d719ed51312` | everything: 1.5 s retreat pulses, mid-fight cubes, prefer low-HP and current target, lethal laser at 0.7, laser range 120, laser-first upgrades |
+| G2 | `37f6e96e78187b9a35c723b24babb8fc9502bf55` | G1 + wider engagement (weak / aiming at us / closing) |
+| G3 | `cf5ceb47f003d8be57dbc82a301e80f50d33153b` | G1 without the retreat pulses |
+| G4 | `59c192ed29b7f72e657c63d8351e55376113a33b` | target choice + lethal laser only |
+| G5 | `31027561de65df0b491aa53c0a301e0fd05d2e14` | retreat pulses + mid-fight cubes only |
+
 | # | Commit (full hash) | What it tests | Codex's estimate |
 | --- | --- | --- | --- |
 | 1 | `ba8ca9fbbcbe613d0db3b767cf0f48d66bdefc2b` | c01: engage 45 m, finish below 20% HP, lethal partial laser | +0.35 |

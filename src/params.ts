@@ -13,7 +13,7 @@ export const P = {
   pickupDetour: 160, // m: walk to wanted weapon pickups this close when no threat
   targetDistW: 4,
   ffaDeaths: 2, // unexplained deaths before we decide it's a free-for-all
-  ffaOverrides: { retreatHp: 0.35 } as Record<string, unknown>, // c09: batch 31 values restored once a free-for-all is detected
+  ffaOverrides: { fightBoostOn: 80, fightBoostOff: 45 } as Record<string, unknown>, // c10: batch 31 values restored once a free-for-all is detected
   engageRange: 60, // top teams (5.1+): only fight mechs within ~60 m, attackers, or nearly dead ones (don't wake idle house bots)
   oddsW: { b0: 1.778, lhp: 1.775, cubes: -0.657, weap: 1.162, others: -0.653, dist: 0.078, back: -0.133 }, // own fit, sim/fights.ts (903 fights, 82% acc)
   oddsEngage: 0, // practice: start fights with predicted win prob >= this (0 = off). sim: 0.7/0.8/0.9 all -0.2..-0.4 (wakes more bots)
@@ -43,7 +43,7 @@ export const P = {
   attackerBonus: 250, // target bonus for whoever damaged us in the last 3 s
   rearBonus: 0, // extra target bonus for whoever hit us in the back in the last 2 s
   spreadBackoff: 0, // move away from the enemy centroid when they spread >90° around us (0 = off) // target score bonus for staying on the current target (finish kills before they regen) // target score: hp + dist * this (lower = preferred)
-  retreatHp: 0.25, // break line of sight below this hp fraction when the enemy has more hp
+  retreatHp: 0.35, // break line of sight below this hp fraction when the enemy has more hp
   gunRange: 90, // batch 20
   laserRange: 110, // REAL best (batch 20: 4.13). 255->3.42 230->3.79 150->3.85/3.60 80->3.69 50->4.04
   lightningRange: 130, // REAL batch 23 (lightning on) 3.65 < batch 20: keep it off
@@ -79,7 +79,7 @@ export const P = {
   roofArea: 400, // m²: minimum footprint
   roofSearch: 250, // m: only roofs this close
   climbTimeout: 5, // s: give up a climb (and blacklist that roof) after this
-  fightBoostOn: 80, // start boost-strafing in fights above this energy
-  fightBoostOff: 45, // stop below this (keeps a reserve for dodges) // keep this much energy before boosting to dodge
+  fightBoostOn: 90, // start boost-strafing in fights above this energy
+  fightBoostOff: 55, // stop below this (keeps a reserve for dodges) // keep this much energy before boosting to dodge
   endgameRadius: 70, // once the next circle is this small, stand on next_center exactly
 }

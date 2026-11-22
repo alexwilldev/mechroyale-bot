@@ -207,6 +207,50 @@ export class Turtle {
     return this.fightOdds(m, obs) >= this.p.oddsEngage
   }
 
+  /**
+   * Local fight step: rate standing still and 16 short steps around us. Prefer our weapon's range, a clear line to the
+   * target when a shot is ready (and none while reloading), few other enemies with a line on the spot, nearby cubes,
+   * and continuing the current strafe. Returns a move vector, or null to keep the default strafe.
+   */
+  fightStep(me: Observation["self"], pos: V3, target: ActorObs, mechs: ActorObs[], obs: Observation, want: number, strafeYaw: number,
+    gun: any, laser: any, lightning: any, d: number): number[] | null {
+    const map = this.map!, nav = this.nav!
+    const ws = target.weapons ?? []
+    let pref = want
+    if (!lightning) {
+      if (ws.includes("lightning")) pref = Math.max(pref, 64)
+      if (ws.includes("mortar")) pref = Math.max(pref, 80)
+    }
+    const gunReady = gun && (gun.ammo ?? 1) > 0 && (gun.reload ?? 0) <= 0.25 && d < (gun.stats.range ?? 120) - 10
+    const losPref = laser || lightning || gunReady ? 1 : -1
+    const eyeZ = me.stats.muzzle_height ?? 7
+    const tc = [target.pos[0], target.pos[1], target.pos[2] + 4.5]
+    const others = mechs.filter((m) => m.id !== target.id && hdist(m.pos, pos) < 200)
+    let cube: V3 | null = null, cd = 40
+    for (const c of obs.cubes) {
+      const dc = hdist(c.pos, pos)
+      if (dc < cd && Math.abs(c.pos[2] - pos[2]) < 4) (cd = dc), (cube = c.pos)
+    }
+    const sx = Math.cos(strafeYaw), sy = Math.sin(strafeYaw)
+    let best = -1e9, bestMv: number[] | null = null
+    for (let k = -1; k < 16; k++) {
+      const ux = k < 0 ? 0 : Math.cos((k * Math.PI) / 8), uy = k < 0 ? 0 : Math.sin((k * Math.PI) / 8)
+      const px = pos[0] + ux * 6, py = pos[1] + uy * 6
+      if (k >= 0 && !nav.lineFree(pos[0], pos[1], px, py)) continue
+      const gz = k < 0 ? pos[2] : map.groundAt(px, py)
+      const p: V3 = [px, py, gz]
+      const sees = map.los([px, py, gz + eyeZ], tc)
+      let s = -1.1 * Math.abs(hdist(p, target.pos) - pref) - (k < 0 ? 0 : 2.4)
+      if (sees) s += 45 * losPref
+      for (const o of others) if (hdist(o.pos, p) < 170 && map.los([o.pos[0], o.pos[1], o.pos[2] + 8], [px, py, gz + 4])) s -= 30
+      if (cube) s += 1.5 * (hdist(pos, cube) - hdist(p, cube))
+      if (k >= 0 && losPref > 0) s += 9 * (ux * sx + uy * sy)
+      if (k < 0) s += -8 + (losPref < 0 && !sees ? 14 : 0)
+      if (s > best) (best = s), (bestMv = k < 0 ? [0, 0] : [ux, uy])
+    }
+    return bestMv
+  }
+
   /** Extra reasons to start a fight (giddy-style selective engagement). */
   wantsFight(m: ActorObs, pos: V3): boolean {
     if (!this.p.wideEngage) return false
@@ -630,6 +674,10 @@ export class Turtle {
         const radial = Math.max(-1, Math.min(1, (d - want) / (want * 0.5)))
         const py = ty0 + (this.strafeSign * Math.PI) / 2
         mv = [mv[0] * 0.4 + Math.cos(py) + radial * Math.cos(ty0), mv[1] * 0.4 + Math.sin(py) + radial * Math.sin(ty0)]
+        if (this.p.fightScore && this.map && this.nav && !this.late()) {
+          const pick = this.fightStep(me, pos, target, mechs, obs, want, py, gun, laser, lightning, d)
+          if (pick) mv = pick
+        }
         // several enemies spread around us: back away from them so they all fall inside our front arc
         if (this.p.spreadBackoff > 0 && mechs.length > 1) {
           let sx = 0, sy = 0, maxOff = 0

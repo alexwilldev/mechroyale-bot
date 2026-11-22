@@ -17,6 +17,8 @@ gave g1 4.67 (12 matches); the batch 31 baseline sits around 3.6–4.1.
 
 | # | Commit (full hash) | What it tests |
 | --- | --- | --- |
+| G9 | `31f95827ff3d98be032844a06e3c1639592141f6` | G1 + rate 16 local steps in fights (range, line of sight, exposure to other enemies, cubes) |
+| G10 | `b3858d63ca92556f794cc0ad9ac6a3d9aea38830` | G9 + finish (close to 20 m on badly hurt targets) |
 | G6 | `dc7f5663f335aed2b557fa24b9bfe6217b00f84b` | G1 + close to 20 m on targets below 38% HP (when we're above 42%) |
 | G8 | `293f3a63fd33fc6592f5d3cf5959273b5d9dfc2f` | G6 + wider looting (detour 150 m, hunt drones down to 35% HP) |
 | G7 | `26c7c252daa9df6a1d658dd87c7736f9a517c3c6` | G1 + wider looting only |

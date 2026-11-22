@@ -96,4 +96,5 @@ export const P = {
   lowBonus: 0, // target score bonus for enemies at <= 30% hp
   lethalK: 1, // lethal laser: release when this fraction of the partial-charge damage (incl. rear x1.5 / mortar cook-off) kills
   maxTarget: 0, // m: ignore targets farther than this (0 = off)
+  finishRange: 0, // m: practice: close to this range on a target below 38% hp while we're above 42% (0 = off)
 }

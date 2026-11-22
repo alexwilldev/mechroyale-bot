@@ -618,7 +618,15 @@ export class Turtle {
         }
         // hold our weapon's best range: close in with lightning, keep gun/laser distance otherwise
         // laser outranges everything and can't miss: fight from far so their bullets have time to miss us
-        const want = lightning && me.energy > 25 ? this.p.lightningRange : laser ? this.p.laserRange : this.p.gunRange
+        let want = lightning && me.energy > 25 ? this.p.lightningRange : laser ? this.p.laserRange : this.p.gunRange
+        // finish: a badly hurt target, us healthy, at most one other enemy around -> close right in
+        if (
+          this.p.finishRange > 0 && !this.ffa &&
+          (target.hp ?? 1400) < 0.38 * (target.max_hp ?? 1400) && me.hp / me.max_hp > 0.42 &&
+          obs.mechs.filter((m) => m.kind === "mech" && hdist(m.pos, pos) < 150).length <= 2
+        ) {
+          want = this.p.finishRange
+        }
         const radial = Math.max(-1, Math.min(1, (d - want) / (want * 0.5)))
         const py = ty0 + (this.strafeSign * Math.PI) / 2
         mv = [mv[0] * 0.4 + Math.cos(py) + radial * Math.cos(ty0), mv[1] * 0.4 + Math.sin(py) + radial * Math.sin(ty0)]

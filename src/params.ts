@@ -98,4 +98,6 @@ export const P = {
   maxTarget: 0, // m: ignore targets farther than this (0 = off)
   fightScore: false, // fight movement: rate 16 short steps (range, line of sight, exposure to other enemies, cubes, strafe)
   finishRange: 0, // m: practice: close to this range on a target below 38% hp while we're above 42% (0 = off)
+  finishFrac: 0.38, // ...target below this hp fraction
+  finishSelf: 0.42, // ...while we are above this
 }

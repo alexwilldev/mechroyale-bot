@@ -666,7 +666,7 @@ export class Turtle {
         // finish: a badly hurt target, us healthy, at most one other enemy around -> close right in
         if (
           this.p.finishRange > 0 && !this.ffa &&
-          (target.hp ?? 1400) < 0.38 * (target.max_hp ?? 1400) && me.hp / me.max_hp > 0.42 &&
+          (target.hp ?? 1400) < this.p.finishFrac * (target.max_hp ?? 1400) && me.hp / me.max_hp > this.p.finishSelf &&
           obs.mechs.filter((m) => m.kind === "mech" && hdist(m.pos, pos) < 150).length <= 2
         ) {
           want = this.p.finishRange

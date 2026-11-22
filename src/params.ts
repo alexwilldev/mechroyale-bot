@@ -13,7 +13,7 @@ export const P = {
   pickupDetour: 160, // m: walk to wanted weapon pickups this close when no threat
   targetDistW: 4,
   ffaDeaths: 2, // unexplained deaths before we decide it's a free-for-all
-  ffaOverrides: { fightBoostOn: 80, fightBoostOff: 45 } as Record<string, unknown>, // c10: batch 31 values restored once a free-for-all is detected
+  ffaOverrides: {} as Record<string, number>, // sim FFA h2h of engageRange=60 was +0.7, -0.84, 0.0 on 3 seed sets: no reliable edge, so no switch
   engageRange: 60, // top teams (5.1+): only fight mechs within ~60 m, attackers, or nearly dead ones (don't wake idle house bots)
   oddsW: { b0: 1.778, lhp: 1.775, cubes: -0.657, weap: 1.162, others: -0.653, dist: 0.078, back: -0.133 }, // own fit, sim/fights.ts (903 fights, 82% acc)
   oddsEngage: 0, // practice: start fights with predicted win prob >= this (0 = off). sim: 0.7/0.8/0.9 all -0.2..-0.4 (wakes more bots)
@@ -79,7 +79,7 @@ export const P = {
   roofArea: 400, // m²: minimum footprint
   roofSearch: 250, // m: only roofs this close
   climbTimeout: 5, // s: give up a climb (and blacklist that roof) after this
-  fightBoostOn: 90, // start boost-strafing in fights above this energy
-  fightBoostOff: 55, // stop below this (keeps a reserve for dodges) // keep this much energy before boosting to dodge
+  fightBoostOn: 80, // start boost-strafing in fights above this energy
+  fightBoostOff: 45, // stop below this (keeps a reserve for dodges) // keep this much energy before boosting to dodge
   endgameRadius: 70, // once the next circle is this small, stand on next_center exactly
 }

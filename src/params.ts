@@ -13,7 +13,7 @@ export const P = {
   pickupDetour: 160, // m: walk to wanted weapon pickups this close when no threat
   targetDistW: 4,
   ffaDeaths: 2, // unexplained deaths before we decide it's a free-for-all
-  ffaOverrides: { laserDodgeYaw: 0.15, strafeFlip: 0.6 } as Record<string, unknown>, // c07: batch 31 values restored once a free-for-all is detected
+  ffaOverrides: { laserDetour: 250, laserMemory: 60 } as Record<string, unknown>, // c08: batch 31 values restored once a free-for-all is detected
   engageRange: 60, // top teams (5.1+): only fight mechs within ~60 m, attackers, or nearly dead ones (don't wake idle house bots)
   oddsW: { b0: 1.778, lhp: 1.775, cubes: -0.657, weap: 1.162, others: -0.653, dist: 0.078, back: -0.133 }, // own fit, sim/fights.ts (903 fights, 82% acc)
   oddsEngage: 0, // practice: start fights with predicted win prob >= this (0 = off). sim: 0.7/0.8/0.9 all -0.2..-0.4 (wakes more bots)
@@ -23,8 +23,8 @@ export const P = {
   finishHp: 0.3, // also engage any visible mech below this hp fraction
   healStart: 0, // heal-to-full: stop picking fights below this hp fraction (0 = off)
   healUntil: 0.95, // ...until back above this
-  laserMemory: 60, // s to remember a laser pickup we saw
-  laserDetour: 250,
+  laserMemory: 40, // s to remember a laser pickup we saw
+  laserDetour: 150,
   exploreUntil: 0, // s: explore for a laser until then (0 = off). sim: 200 -> -0.1, no gain
   laserDetourEarly: 400, // m: in the first minute, go further for a laser
   laserScanSpin: 0.35, // rad per decision to spin the torso while unarmed and idle (0 = off)
@@ -53,7 +53,7 @@ export const P = {
   roamUntilT: 100, // s: roam for loot until then (or while slot 1 is empty)
   crateShootRange: 70, // m: shoot crates when no threat
   zoneSafety: 0.75, // stay within this fraction of the next radius from next_center
-  strafeFlip: 0.5, // s between strafe direction changes
+  strafeFlip: 0.6, // s between strafe direction changes
   threatMemory: 4, // s to keep facing the last damage bearing
   mortarMinRange: 18, // m: no mortar closer than this (self splash)
   lightningEnergyFloor: 12,
@@ -71,7 +71,7 @@ export const P = {
   reloadBelow: 0.5, // reload when no clear shot and the magazine is below this fraction
   npcHuntHp: 0.65, // only start fights with NPC drones above this hp fraction
   recoverHp: 0.6, // below this hp fraction with no enemy in sight: hold still and regenerate
-  laserDodgeYaw: 0.25, // rad: an enemy charging a laser aimed this close to us -> dodge sideways
+  laserDodgeYaw: 0.15, // rad: an enemy charging a laser aimed this close to us -> dodge sideways
   dodgeEnergy: 20,
   useRoofs: true, // camp on rooftops when idle
   roofMin: 6, // m: roof height above ground range considered

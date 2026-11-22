@@ -13,7 +13,7 @@ export const P = {
   pickupDetour: 160, // m: walk to wanted weapon pickups this close when no threat
   targetDistW: 4,
   ffaDeaths: 2, // unexplained deaths before we decide it's a free-for-all
-  ffaOverrides: {} as Record<string, number>, // sim FFA h2h of engageRange=60 was +0.7, -0.84, 0.0 on 3 seed sets: no reliable edge, so no switch
+  ffaOverrides: { fightLoot: 0, lowBonus: 0, lockBonus: 150, lethalK: 1, lethalLaser: 0, laserRange: 110, wideEngage: 0 } as Record<string, number>, // sim FFA h2h of engageRange=60 was +0.7, -0.84, 0.0 on 3 seed sets: no reliable edge, so no switch
   engageRange: 60, // top teams (5.1+): only fight mechs within ~60 m, attackers, or nearly dead ones (don't wake idle house bots)
   oddsW: { b0: 1.778, lhp: 1.775, cubes: -0.657, weap: 1.162, others: -0.653, dist: 0.078, back: -0.133 }, // own fit, sim/fights.ts (903 fights, 82% acc)
   oddsEngage: 0, // practice: start fights with predicted win prob >= this (0 = off). sim: 0.7/0.8/0.9 all -0.2..-0.4 (wakes more bots)
@@ -90,9 +90,9 @@ export const P = {
   aimTol: 0.22,
   approachRange: 180,
   approachSpeed: 3,
-  loseRule: false, // practice: retreat in 1.5 s pulses while a 'losing' pattern holds (outnumbered and hurt)
+  loseRule: true, // practice: retreat in 1.5 s pulses while a 'losing' pattern holds (outnumbered and hurt)
   losePulse: 1.5,
-  fightLoot: 0, // m: mid-fight, step onto a cube this close (x0.57 below half hp)
+  fightLoot: 70, // m: mid-fight, step onto a cube this close (x0.57 below half hp)
   lowBonus: 0, // target score bonus for enemies at <= 30% hp
   lethalK: 1, // lethal laser: release when this fraction of the partial-charge damage (incl. rear x1.5 / mortar cook-off) kills
   maxTarget: 0, // m: ignore targets farther than this (0 = off)

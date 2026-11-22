@@ -9,17 +9,17 @@ export const P = {
   ],
   // Weapon preference for the second slot (higher = better).
   weaponScore: { laser: 3, mortar: 2, lightning: 1, gun: 0 } as Record<string, number>, // sim: laser +1.9 pts, mortar +0.3, lightning -0.2
-  lootDetour: 80, // m: walk to visible cubes this close when no threat
+  lootDetour: 50, // m: walk to visible cubes this close when no threat
   pickupDetour: 160, // m: walk to wanted weapon pickups this close when no threat
   targetDistW: 4,
   ffaDeaths: 2, // unexplained deaths before we decide it's a free-for-all
-  ffaOverrides: { lethalLaser: false } as Record<string, unknown>, // c03: batch 31 values restored once a free-for-all is detected
+  ffaOverrides: { roamUntilT: 100, lootDetour: 80, dropRange: 170 } as Record<string, unknown>, // c04: batch 31 values restored once a free-for-all is detected
   engageRange: 60, // top teams (5.1+): only fight mechs within ~60 m, attackers, or nearly dead ones (don't wake idle house bots)
   oddsW: { b0: 1.778, lhp: 1.775, cubes: -0.657, weap: 1.162, others: -0.653, dist: 0.078, back: -0.133 }, // own fit, sim/fights.ts (903 fights, 82% acc)
   oddsEngage: 0, // practice: start fights with predicted win prob >= this (0 = off). sim: 0.7/0.8/0.9 all -0.2..-0.4 (wakes more bots)
   oddsRange: 160, // ...within this range
   oddsFlee: 0, // REAL batch 35 (flee <0.45) 4.19 < batch 31 4.52 -> off
-  lethalLaser: true, // release a partial laser charge when it already kills
+  lethalLaser: false, // release a partial laser charge when it already kills
   finishHp: 0.3, // also engage any visible mech below this hp fraction
   healStart: 0, // heal-to-full: stop picking fights below this hp fraction (0 = off)
   healUntil: 0.95, // ...until back above this
@@ -50,7 +50,7 @@ export const P = {
   farmCubes: 0, // keep roaming for crates/drones/cubes until we hold this many cubes
   farmUntilT: 230, // ...or until this time
   npcRange: 80, // m: engage NPC drones this close (when healthy)
-  roamUntilT: 100, // s: roam for loot until then (or while slot 1 is empty)
+  roamUntilT: 60, // s: roam for loot until then (or while slot 1 is empty)
   crateShootRange: 70, // m: shoot crates when no threat
   zoneSafety: 0.75, // stay within this fraction of the next radius from next_center
   strafeFlip: 0.6, // s between strafe direction changes
@@ -66,7 +66,7 @@ export const P = {
   holdSamples: 12, // candidate spots tried when picking a covered hold position
   holdSearch: 45, // m: how far from current position to look for it
   holdRay: 50, // m: sight-line length used to measure exposure
-  dropRange: 170, // m: go for supply drops this close when no enemy is in sight
+  dropRange: 110, // m: go for supply drops this close when no enemy is in sight
   dropLate: 12, // s: still go if we arrive at most this long after it lands
   reloadBelow: 0.5, // reload when no clear shot and the magazine is below this fraction
   npcHuntHp: 0.65, // only start fights with NPC drones above this hp fraction
